@@ -1,0 +1,35 @@
+<!-- Default Style Sheet Definitions -->
+
+<!-- General Page Layout -->
+BODY { background: #909090; margin-left: 0; margin-top: 0; margin-right: 0; font-family:  arial, helv, sans-serif; font-size: 12px; }
+
+<!-- Fonts, Text and Headers -->
+<!-- 
+  Note:  Fonts are specified in PX and not PT so that it looks right on different systems. 
+  This will probably drive those who want to increase the font size batty, though. :)
+-->
+P  { font-size: 12px; }
+UL { font-size: 12px; }
+H1 { font-size: 18px; font-weight: bold; }
+H2 { font-size: 16px; font-weight: bold; }
+H3 { font-size: 14px; font-weight: bold; }
+.pageTitle { font-size: 21px; font-weight: bold; color: #005572; }
+
+<!-- Positioning -->
+.indent     { padding-left: 15; }
+.indentmore { padding-left: 30; }
+
+<!-- Tables and Menus -->
+TABLE         { border-width: 0; cell-padding: 0; cellspacing: 0; }
+TH			  { background: #99cc99; text-align: left; }
+.tblPageTitle { font-size: 19px; background: #005572; color: #ffffff; text-indent: 5px; }
+.menu 		  { font-size: 11px; color: #ffffff; }
+
+<!-- Links of Various Types -->
+A			{ text-decoration: none; color: #005572; }
+A:hover		{ text-decoration: underline; }
+.boldy    	{ font-weight: bold; }
+.whitey		{ font-size: 12px; color: #ffffff; }
+.smwhitey	{ font-size: 11px; color: #ffffff; }
+.black		{ font-size: 12px; color: #000000; }
+.smblack	{ font-size: 11px; color: #000000; }

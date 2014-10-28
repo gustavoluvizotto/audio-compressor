@@ -1,0 +1,377 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+	<title>Wav (RIFF) File Format Tutorial</title>
+<link rel="stylesheet" type="text/css" href="Wav_%28RIFF%29_File_Format_Tutorial_files/default.css"></head>
+
+<body>
+<table bgcolor="#909090" height="100%" width="100%">
+<tbody><tr><td align="center" valign="middle">
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tbody><tr>
+ <td colspan="2" align="left" bgcolor="d9f2f9"><img src="Wav_%28RIFF%29_File_Format_Tutorial_files/page-logo.html" align="right"><img src="Wav_%28RIFF%29_File_Format_Tutorial_files/text-software.html"></td>
+</tr>
+<tr>
+ <td align="left" bgcolor="99cc99"><div class="smblack">
+  &nbsp; &nbsp;
+  <a href="http://www.topherlee.com/" class="smblack">Home</a>
+  &nbsp; · &nbsp;
+  <a href="http://www.topherlee.com/caraudio/" class="smblack">Car Audio</a>
+  &nbsp; · &nbsp;
+  <a href="http://www.topherlee.com/software/" class="smblack">Software</a>
+  &nbsp; · &nbsp;
+  <a href="http://www.topherlee.com/random/" class="smblack">Random Stuff</a>
+  </div>
+ </td>
+</tr>
+<tr>
+ <td align="left" bgcolor="#ffffff">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+   <tbody><tr>
+	 <td>&nbsp;</td>
+	<td valign="top"> 
+     <p>
+		 <b>Digital Audio - Creating a WAV (RIFF) file</b>
+		 </p>
+		 <p>
+     <b>Abstract:</b><br>
+     This tutorial covers the creation of a WAV (RIFF) audio file.  It 
+covers bit size, sample rate, channels, data, headers and finalizing the
+ file.  This document is designed to cover uncompressed PCM audio files,
+ the most common type of RIFF files.  This document does not cover 
+inserting useful data into the WAV (RIFF) audio file.
+		 </p>
+		 <p>
+ 		 <b>What's a WAV (RIFF) File?</b><br>
+     A WAV (RIFF) file is a multi-format file that contains a header and
+ data.  For the purposes of this document, only a simple PCM file will 
+be explored.  A WAV file contains a header and the raw data, in time 
+format.
+     </p>
+		 <p>
+     <b>What's bit size?</b><br>
+     Bit size determines how much information can be stored in a file.  
+For most of today's purposes, bit size should be 16 bit.  8 bit files 
+are smaller (1/2 the size), but have less resolution.
+		 </p>
+		 <p>
+Bit size deals with amplitude.  In 8 bit recordings, a total of 256 (0 
+to 255) amplitude levels are available.  In 16 bit, a total of 65,536 
+(-32768 to 32767) amplitude levels are available.  The greater the 
+resolution of the file is, the greater the realistic dynamic range of 
+the file.  CD-Audio uses 16 bit samples.
+     </p>
+		 <p>
+<b>What is Sample Rate?</b><br>
+Sample rate is the number of samples per second.  CD-Audio has a sample 
+rate of 44,100.  This means that 1 second of audio has 44,100 samples.  
+DAT tapes have a sample rate of 48,000.
+</p>
+<p>
+When looking at frequency response, the highest frequency can be considered to be 1/2 of the sample rate.  
+</p>
+<p>
+<b>What are Channels?</b><br>
+Channels are the number of separate recording elements in the data.  For
+ a real quick example, one channel is mono and two channels are stereo. 
+  In this document, both single and dual channel recordings will be 
+discussed.
+</p>
+<p>
+<b>What is the data?</b><br>
+The data is the individual samples.  An individual sample is the bit 
+size times the number of channels.  For example, a monaural (single 
+channel), eight bit recording has an individual sample size of 8 bits.  A
+ monaural sixteen-bit recording has an individual sample size of 16 
+bits.  A stereo sixteen-bit recording has an individual sample size of 
+32 bits.
+</p>
+<p>
+Samples are placed end-to-end to form the data.  So, for example, if you
+ have four samples (s1, s2, s3, s4) then the data would look like: 
+s1s2s3s4.
+</p>
+<p>
+<b>What is the header?</b><br>
+The header is the beginning of a WAV (RIFF) file.  The header is used to
+ provide specifications on the file type, sample rate, sample size and 
+bit size of the file, as well as its overall length.
+</p>
+<p>
+The header of a WAV (RIFF) file is 44 bytes long and has the following format:
+</p>
+<table summary="WAV File Header" border="1">
+<tbody><tr>
+ <td>
+ Positions
+ </td>
+ <td>
+ Sample Value
+ </td>
+ <td>
+ Description
+ </td>
+</tr>
+<tr>
+ <td>
+1 - 4	
+</td>
+<td>
+"RIFF"
+</td>
+<td>	
+Marks the file as a riff file.  Characters are each 1 byte long.
+ </td>
+</tr>
+<tr>
+ <td>
+5 - 8	
+ </td>
+ <td>
+File size (integer)	
+ </td>
+ <td>
+Size of the overall file - 8 bytes, in bytes (32-bit integer).  Typically, you'd fill this in after creation.
+ </td>
+</tr>
+<tr>
+ <td>
+9 -12	
+ </td>
+ <td>
+"WAVE"	
+ </td>
+ <td>
+File Type Header.  For our purposes, it always equals "WAVE".
+ </td>
+</tr>
+<tr>
+ <td>
+13-16	
+ </td>
+ <td>
+"fmt "	
+ </td>
+ <td>
+Format chunk marker.  Includes trailing null
+ </td>
+</tr>
+<tr>
+ <td>
+17-20	
+ </td>
+ <td>
+16	
+ </td>
+ <td>
+Length of format data as listed above
+ </td>
+</tr>
+<tr>
+ <td>
+21-22	
+ </td>
+ <td>
+1	
+ </td>
+ <td>
+Type of format (1 is PCM) - 2 byte integer
+ </td>
+</tr>
+<tr>
+ <td>
+23-24	
+ </td>
+ <td>
+2	
+ </td>
+ <td>
+Number of Channels - 2 byte integer
+ </td>
+</tr>
+<tr>
+ <td>
+25-28	
+ </td>
+ <td>
+44100	
+ </td>
+ <td>
+Sample Rate - 32 byte integer.  Common values are 44100 (CD), 48000 
+(DAT).  Sample Rate = Number of Samples per second, or Hertz.
+ </td>
+</tr>
+<tr>
+ <td>
+29-32	
+ </td>
+ <td>
+176400	
+ </td>
+ <td>
+(Sample Rate * BitsPerSample * Channels) / 8.  
+ </td>
+</tr>
+<tr>
+ <td>
+33-34	
+ </td>
+ <td>
+4	
+ </td>
+ <td>
+(BitsPerSample * Channels) / 8.1 - 8 bit mono2 - 8 bit stereo/16 bit mono4 - 16 bit stereo
+ </td>
+</tr>
+<tr>
+ <td>
+35-36	
+ </td>
+ <td>
+16	
+ </td>
+ <td>
+Bits per sample
+ </td>
+</tr>
+<tr>
+ <td>
+37-40	
+ </td>
+ <td>
+"data"	
+ </td>
+ <td>
+"data" chunk header.  Marks the beginning of the data section.
+ </td>
+</tr>
+<tr>
+ <td>
+41-44	
+ </td>
+ <td>
+File size (data)	
+ </td>
+ <td>
+Size of the data section.
+ </td>
+</tr>
+<tr>
+ <td colspan="3">
+Sample values are given above for a 16-bit stereo source.
+ </td>
+</tr>
+</tbody></table>
+
+<p>
+So, that's the header.  It shouldn't be difficult to write an 
+application that creates the header, but in case you don't want to 
+bother, I've included some Visual Basic code to do just that at the end 
+of this document.
+</p>
+<p>
+<b>Finalizing the file</b><br>
+Finalizing the file is actually incredibly easy.  You don't need to do 
+anything except making sure that the file size fields are filled in 
+correctly.
+</p>
+<p>
+<b>Putting it together.</b><br>
+For the first WAV file example, we're going to create the simplest 
+possible file.  This file will be full of zero-bit data.  Zero-bit data 
+is basically a sample with 0 amplitude.  While very boring, zero-bit 
+files are important in testing stereos.  Because there is an amplitude 
+(volume) of zero, noise induced by various components can be found.
+</p>
+<p>
+Here's visual basic code to create the file.  This code is as simple as 
+possible, and is designed to provide a look at the process.
+</p>
+<pre>public Sub WriteZeroByteFile()
+Dim sampleRate as Integer
+Dim bitSize as Integer
+Dim numChannels as Integer
+Dim numSeconds as Integer
+Dim fileName as String
+Dim fileSize as Integer
+Dim dataPos as Integer
+Dim headerLength as Integer
+Dim totalSamples as Integer
+
+' Set up our parameters
+sampleRate = 44100        ' CD-Quality Sound.
+bitSize = 16              ' Bit Size is 16 (CD-Quality).
+numChannels = 2           ' Stereo mode (2-channel).
+numSeconds = 1            ' We're going to make a 1 second sample.
+fileSize = 0              ' Just set it to zero for now.
+fileName = "c:\temp.wav"  ' Pick a temporary file name.
+
+     
+' Open the file.  This will fail if the file exists.
+Open fileName For Binary Access Write As #1
+
+' Write the header
+Put #1, 1,  "RIFF"        ' RIFF marker
+Put #1, 5,  CInt(0)       ' file-size (equals file-size - 8)
+Put #1, 9,  "WAVE"        ' Mark it as type "WAVE"
+Put #1, 13, "fmt "        ' Mark the format section.
+Put #1, 17, CLng(16)      ' Length of format data.  Always 16
+Put #1, 21, CInt(1)       ' Wave type PCM
+Put #1, 23, CInt(2)       ' 2 channels
+Put #1, 25, CLng(44100)   ' 44.1 kHz Sample Rate (CD-Quality)
+Put #1, 29, CLng(88200)   ' (Sample Rate * Bit Size * Channels) / 8
+Put #1, 33, CInt(2)       ' (Bit Size * Channels) / 8
+Put #1, 35, CInt(16)      ' Bits per sample (=Bit Size * Samples)
+Put #1, 37, "data"        ' "data" marker
+Put #1, 41, CInt(0)       ' data-size (equals file-size - 44).
+
+' headerLength is the length of the header.  It is used for offsetting
+' the data position.
+headerLength = 44
+
+' Determine the total number of samples 
+totalSamples = sampleRate * numSeconds
+
+' Populate with 0 bit data.
+' This isn't a good reference for creating PCM data.  Since we are
+' just dumping 0 bit data, we're dumping it in 32 bit chunks.
+For dataPos = 1 to (totalSamples * 4) step 4
+  ' We're doing 16-bit, so we need to write 2 bytes per channel.
+  ' Write both channels using a 32 bit integer.
+  ' Again, this isn't a good reference.  Ignore this data writing
+  ' process.  It's useless for anything but 0 bit data.
+  Put #1, dataPos + headerLength, CInt(0)  
+Next
+
+' Finalize the file.  Write the file size to the header.
+fileSize = LOF(1)               ' Get the actual file size.
+Put #1, 5, CLng(fileSize - 8)   ' Set first file size marker.
+Put #1, 41, CLng(fileSize - 44) ' Set data size marker.
+Close #1 ' Close the file.
+End Sub
+
+</pre>
+<p>
+<b>Conclusion</b><br>
+This tutorial should have provided enough information to understand the 
+WAV (RIFF) file format and to create one.  Now that you've examined the 
+creation of a WAV file, the next step is to populate it with meaningful 
+data.
+</p>
+<br>
+	</td>
+   </tr>
+  </tbody></table>
+ </td>
+</tr>
+<tr>
+ <td align="center" bgcolor="#005572">
+ <div class="smwhitey">feedback at topherlee.com</div>
+ </td>
+</tr>
+</tbody></table>
+</td></tr>
+</tbody></table>
+
+
+</body></html>
