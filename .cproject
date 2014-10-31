@@ -27,8 +27,8 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1478954384" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.1984610964" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" value="gnu.c.optimization.level.most" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.432119765" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.c.compiler.option.dialect.std.2079805001" superClass="gnu.c.compiler.option.dialect.std" value="gnu.c.compiler.dialect.c90" valueType="enumerated"/>
-								<option id="gnu.c.compiler.option.misc.ansi.514778294" superClass="gnu.c.compiler.option.misc.ansi" value="true" valueType="boolean"/>
+								<option id="gnu.c.compiler.option.dialect.std.2079805001" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" value="gnu.c.compiler.dialect.c90" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.misc.ansi.514778294" name="Support ANSI programs (-ansi)" superClass="gnu.c.compiler.option.misc.ansi" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1104925044" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.675614398" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
@@ -73,6 +73,8 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.release.467755965" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.release">
 								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.exe.release.option.optimization.level.11920001" name="Optimization Level" superClass="gnu.c.compiler.exe.release.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.release.option.debugging.level.1384457909" name="Debug Level" superClass="gnu.c.compiler.exe.release.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.dialect.std.1285245950" superClass="gnu.c.compiler.option.dialect.std" value="gnu.c.compiler.dialect.c90" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.misc.ansi.287277729" superClass="gnu.c.compiler.option.misc.ansi" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.114907090" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.release.1374741999" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.release">
