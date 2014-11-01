@@ -5,8 +5,6 @@
  *      Author: gustavo
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "inc/wav.h"
 #include "inc/common.h"
 
@@ -90,6 +88,14 @@ int main (int argc, char* argv[]) {
 	result_t result;
 
 	result = read_sound(in_file, fp);
-    system("pause");
-	return result;
+
+	if (fmt_chunk.audio_format != 1) {
+		printf("Compressed file!\n");
+		result = -ERR_FAIL;
+	}
+
+    printf("Press <ENTER> to exit... ");
+    getchar();
+
+    return result;
 }
