@@ -14,7 +14,7 @@
 typedef struct {
 	char chunk_id[4];           /* big      */
 	uint32_t chunk_size;        /* little   */
-	char format[8];             /* big      */
+	char format[4];             /* big      */
 } riff_chunk_t;
 #pragma pack (pop)		/* back to the normal format pack mode */
 
@@ -35,7 +35,9 @@ typedef struct {
 typedef struct {
 	char sub_chunk2_id[4];      /* big      */
     uint32_t sub_chunk2_size;   /* little   */
-    uint8_t *data;              /* little   */
 } data_chunk_t;
+#pragma pack (pop)
+
+uint8_t *data;              	/* little   */
 
 #endif /* INC_WAV_H_ */
