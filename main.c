@@ -78,9 +78,6 @@ FAIL_READ_FILE:
 }
 
 void print_headers() {
-	PRINT_STRUCT(&riff_chunk);
-	PRINT_STRUCT(&fmt_chunk);
-	PRINT_STRUCT(&data_chunk);
 
 	TRACE("riff: %lu \n", sizeof(riff_chunk));
 	TRACE("fmt: %lu \n", sizeof(fmt_chunk));
@@ -93,6 +90,6 @@ int main (int argc, char* argv[]) {
 	result_t result;
 
 	result = read_sound(in_file, fp);
-
+    system("pause");
 	return result;
 }
