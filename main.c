@@ -7,6 +7,7 @@
 
 #include "inc/wav.h"
 #include "inc/common.h"
+#include "inc/huffman.h"
 
 /*
 #undef TRACE(fmt, ...)
@@ -82,20 +83,128 @@ void print_headers() {
 	TRACE("data: %lu \n", sizeof(data_chunk));
 }
 
+void system_pause() {
+    printf("Press <ENTER> to exit... ");
+    getchar();
+}
+
+uint8_t search_for_equal_element(int *list, int size, int key) {
+	  uint8_t found = FALSE;
+	  int i;
+
+	  for ( i = 0; i < size; i++ ) {
+	    if ( key == list[i] )
+	      break;
+	  }
+	  if ( i < size ) {
+	    found = TRUE;
+	  }
+
+	  return found;
+}
+
+result_t compress() {
+	result_t result;			/* return results */
+	size_t i, j;				/* index */
+	int8_t ans;					/* answer of the user about compress modes */
+	int8_t modes[3];			/* modes of compress */
+	uint8_t is_equal = FALSE;	/* check if a compress has been choosed*/
+	uint8_t **data_adjusted;	/* the input data per channel adjusted for every compression */
+	size_t data_size_channel;	/* lenght of *data vector per channel */
+
+	printf("Choose the compression you want\n");
+	printf("0. Exit\n1. Huffman\n2. Differences\n3. MDCT\n");
+
+	for (i = 0; i < 3; i++) {
+		modes[i] = 0;
+	}
+
+	for (i = 0; ans != 0 && i < 3;) {
+		scanf("%d", ans);
+		is_equal = search_for_equal_element(modes, 3, ans);
+		if (is_equal == TRUE) {
+			printf("Type a different compression!\n");
+		} else {
+			modes[i] = ans;
+			i++;
+		}
+	}
+
+	data_adjusted = (uint8_t**) malloc (fmt_chunk.num_channels * sizeof(uint8_t*));
+	data_size_channel = sizeof(data)/fmt_chunk.num_channels;
+	for (i = 0; i < fmt_chunk.num_channels; i++) {
+		data_adjusted[i] = (uint8_t*) malloc (data_size_channel * sizeof(uint8_t));
+		for (j = 0; j < data_size_channel; j++) {
+			data_adjusted[i][j] = data[i*data_size_channel + j];
+		}
+	}
+
+	for (i = 0; i < 3; i++){
+		switch (modes[i]) {
+		case 1:
+			for (i = 0; i < fmt_chunk.num_channels; i++) {
+				comprimir_huffman(data_adjusted[i]);
+			}
+			break;
+		case 2:
+
+			break;
+
+		case 3:
+
+			break;
+		default:
+			break;
+		}
+	}
+	return result;
+}
+
 int main (int argc, char* argv[]) {
 	FILE *fp = NULL;
 	char *in_file = "resources/pig.wav";
 	result_t result;
+	char mode;								/* compress/decompress */
 
-	result = read_sound(in_file, fp);
+	printf("Choose compress(c) or decompress(d): ");
+	scanf("%c", mode);
 
-	if (fmt_chunk.audio_format != 1) {
-		printf("Compressed file!\n");
-		result = -ERR_FAIL;
+	printf("Enter with the path and name of the sound/compressed file (including de extension -- .wav or .bin): ");
+	scanf("%s", in_file);
+
+	if (mode == 'c') {
+		result = read_sound(in_file, fp);
 	}
 
-    printf("Press <ENTER> to exit... ");
-    getchar();
+	if (result == -ERR_FAIL) {
+		printf("Wrong path/file/extension or file doesn't exist!\n");
+		goto ERR_FILE;
+	}
 
-    return result;
+	if (mode == 'c') {
+		if (fmt_chunk.audio_format != 1) {
+			printf("Compressed file!\n");
+			goto COMPRESSED_FILE;
+		}
+	}
+
+	if (mode == 'c') {
+		result = compress();
+	} else {
+		if (mode == 'd') {
+			printf("Decompress mode \n");
+		} else {
+			printf("Invalid mode!\n");
+			goto INVALID_MODE;
+		}
+	}
+	system_pause();
+	return result;
+
+INVALID_MODE:
+COMPRESSED_FILE:
+ERR_FILE:
+	result = -ERR_FAIL;
+	system_pause();
+	return result;
 }

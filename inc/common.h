@@ -22,6 +22,12 @@
 #undef	ERR_FAIL
 #define	ERR_FAIL 1
 
+#undef	TRUE
+#define	TRUE 1
+
+#undef	FALSE
+#define	FALSE 0
+
 #define MAX_SAMPLE 510	/* 255 (negative numbers) + 1 (zero) + 255 (positive numbers) */
 #define	MAXSIZE 32
 
