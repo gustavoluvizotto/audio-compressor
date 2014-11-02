@@ -11,6 +11,6 @@
 #include "queue.h"
 
 node_t* huffman(uint32_t *frequency);
-void comprimir_huffman(uint8_t *data, char **samples);
+void comprimir_huffman(uint8_t *data);
 
 #endif /* INC_HUFFMAN_H_ */

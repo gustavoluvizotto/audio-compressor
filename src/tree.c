@@ -30,7 +30,7 @@ void in_order(node_t *node) {
     }
     in_order(node->left);
 
-    printf("%X: %d\n", node->sample, node->frequency);
+    printf("%s: %d\n", node->sample, node->frequency);
 
     in_order(node->right);
 	return;

@@ -18,8 +18,7 @@ riff_chunk_t riff_chunk;
 fmt_chunk_t fmt_chunk;
 data_chunk_t data_chunk;
 
-result_t read_sound(char *in_file, FILE *fp) {
-	result_t result = -ERR_NO;
+void read_sound(char *in_file, FILE *fp, result_t *result) {
 	size_t reading;
 	uint32_t size;
 	size_t i;
@@ -68,12 +67,12 @@ result_t read_sound(char *in_file, FILE *fp) {
 	result = -ERR_NO;
 	fclose(fp);
 	TRACE("Read file complete!\n");
-	return result;
+	return;
 
 FAIL_OPEN_FILE:
 FAIL_READ_FILE:
-	result = -ERR_FAIL;
-	return result;
+	*result = -ERR_FAIL;
+	return;
 }
 
 void print_headers() {
@@ -88,7 +87,7 @@ void system_pause() {
     getchar();
 }
 
-uint8_t search_for_equal_element(int *list, int size, int key) {
+uint8_t search_for_equal_element(int list[], int size, int key) {
 	  uint8_t found = FALSE;
 	  int i;
 
@@ -103,11 +102,10 @@ uint8_t search_for_equal_element(int *list, int size, int key) {
 	  return found;
 }
 
-result_t compress() {
-	result_t result;			/* return results */
+void compress(result_t *result) {
 	size_t i, j;				/* index */
-	int8_t ans;					/* answer of the user about compress modes */
-	int8_t modes[3];			/* modes of compress */
+	int ans = 1;				/* answer of the user about compress modes */
+	int modes[3];				/* modes of compress */
 	uint8_t is_equal = FALSE;	/* check if a compress has been choosed*/
 	uint8_t **data_adjusted;	/* the input data per channel adjusted for every compression */
 	size_t data_size_channel;	/* lenght of *data vector per channel */
@@ -120,7 +118,7 @@ result_t compress() {
 	}
 
 	for (i = 0; ans != 0 && i < 3;) {
-		scanf("%d", ans);
+		scanf("%d", &ans);
 		is_equal = search_for_equal_element(modes, 3, ans);
 		if (is_equal == TRUE) {
 			printf("Type a different compression!\n");
@@ -157,7 +155,7 @@ result_t compress() {
 			break;
 		}
 	}
-	return result;
+	return;
 }
 
 int main (int argc, char* argv[]) {
@@ -167,13 +165,13 @@ int main (int argc, char* argv[]) {
 	char mode;								/* compress/decompress */
 
 	printf("Choose compress(c) or decompress(d): ");
-	scanf("%c", mode);
+	scanf("%c", &mode);
 
 	printf("Enter with the path and name of the sound/compressed file (including de extension -- .wav or .bin): ");
 	scanf("%s", in_file);
 
 	if (mode == 'c') {
-		result = read_sound(in_file, fp);
+		read_sound(in_file, fp, &result);
 	}
 
 	if (result == -ERR_FAIL) {
@@ -189,7 +187,7 @@ int main (int argc, char* argv[]) {
 	}
 
 	if (mode == 'c') {
-		result = compress();
+		compress(&result);
 	} else {
 		if (mode == 'd') {
 			printf("Decompress mode \n");

@@ -28,12 +28,13 @@
 #undef	FALSE
 #define	FALSE 0
 
-#define MAX_SAMPLE 510	/* 255 (negative numbers) + 1 (zero) + 255 (positive numbers) */
-#define	MAXSIZE 32
+#define MAX_SAMPLE 255	/* may we need to change 510? (255 (negative numbers) + 1 (zero) + 255 (positive numbers)) */
+#define	MAXSIZE 1275	/* 255*5. If every sample apear in the .wav file. 5 characters will be add per sample */
 
 typedef int8_t result_t;
 
 void reverse(char s[]);
 void itoa(int n, char s[]);
+const char *byte_to_binary(int x);
 
 #endif /* INC_COMMON_H_ */

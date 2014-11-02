@@ -8,6 +8,7 @@
 #include "../inc/queue.h"
 
 void queue_create(queue_t *queue) {
+    queue = (queue_t*) malloc(sizeof(queue_t));
     queue->begin = NULL;
     queue->end = NULL;
     queue->count = 0;
