@@ -8,9 +8,9 @@
 #ifndef INC_HUFFMAN_H_
 #define INC_HUFFMAN_H_
 
-#include "common.h"
+#include "queue.h"
 
-void comprimir_huffman(uint8_t *data);
-tree_t* huffman_tree(uint32_t frequency);
+node_t* huffman(uint32_t *frequency);
+void comprimir_huffman(uint8_t *data, char **samples);
 
 #endif /* INC_HUFFMAN_H_ */

@@ -16,7 +16,7 @@ typedef struct node_s {
     struct node_s *left, *right;
 } node_t;
 
-typedef struct {
+typedef struct tree_s {
     node_t* root;
 } tree_t;
 
