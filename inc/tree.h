@@ -11,7 +11,7 @@
 #include "common.h"
 
 typedef struct node_s {
-    uint8_t sample;
+    char *sample;
     uint32_t frequency;
     struct node_s *left, *right;
 } node_t;
@@ -20,8 +20,8 @@ typedef struct {
     node_t* root;
 } tree_t;
 
-void tree(tree_t *tree);	/* init tree */
-node_t* insert_node(uint32_t frequency, uint8_t sample);
+void tree_create(tree_t *tree);	/* init tree */
+node_t* create_node_tree();
 void in_order(node_t *);	/* in order print */
 
 #endif /* INC_TREE_H_ */

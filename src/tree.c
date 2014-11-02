@@ -7,17 +7,17 @@
 
 #include "../inc/tree.h"
 
-void tree(tree_t *tree) {
+void tree_create(tree_t *tree) {
 	tree = (tree_t *) malloc (sizeof(tree_t));
 	tree->root = NULL;
 	return;
 }
 
-node_t* insert_node(uint32_t frequency, uint8_t sample) {
+node_t* create_node_tree() {
 	node_t* new_node = (node_t *) malloc(sizeof(node_t));
 
-    new_node->frequency = frequency;
-    new_node->sample = sample;
+    new_node->frequency = 0;
+    new_node->sample = NULL;
     new_node->right = NULL;
     new_node->left = NULL;
 

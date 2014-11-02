@@ -22,7 +22,8 @@
 #undef	ERR_FAIL
 #define	ERR_FAIL 1
 
-#define MAXBITS 8
+#define MAX_SAMPLE 510	/* 255 (negative numbers) + 1 (zero) + 255 (positive numbers) */
+#define	MAXSIZE 32
 
 typedef int8_t result_t;
 
