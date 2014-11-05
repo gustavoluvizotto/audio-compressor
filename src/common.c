@@ -35,14 +35,66 @@ void itoa(int n, char s[]) {
     reverse(s);
 }
 
-const char *byte_to_binary(int x){
+char *byte_to_binary(uint8_t x){
     static char b[9];
     b[0] = '\0';
+    uint8_t z;
 
-    int z;
     for (z = 128; z > 0; z >>= 1){
         strcat(b, ((x & z) == z) ? "1" : "0");
     }
 
     return b;
 }
+
+result_t write_header_to_file(char *out_file, fmt_chunk_t fmt_chunk) {
+	FILE *fp;
+	size_t writing;
+	result_t result;
+
+	fp = fopen(out_file, "wb");
+	if (fp == NULL) {
+		TRACE("Error to open the out file!\n");
+		result = -ERR_FAIL;
+		return result;
+	}
+
+	writing = fwrite(&fmt_chunk.num_channels, sizeof(uint16_t), 1, fp);
+	if (writing != 1) {
+		TRACE("Error to write in the file -- num channels sector\n");
+		result = -ERR_FAIL;
+		return result;
+	}
+
+	writing = fwrite(&fmt_chunk.sample_rate, sizeof(uint32_t), 1, fp);
+	if (writing != 1) {
+		TRACE("Error to write in the file -- sample rate sector\n");
+		result = -ERR_FAIL;
+		return result;
+	}
+
+	writing = fwrite(&fmt_chunk.byte_rate, sizeof(uint32_t), 1, fp);
+	if (writing != 1) {
+		TRACE("Error to write in the file -- byte rate sector\n");
+		result = -ERR_FAIL;
+		return result;
+	}
+
+	writing = fwrite(&fmt_chunk.block_align, sizeof(uint16_t), 1, fp);
+	if (writing != 1) {
+		TRACE("Error to write in the file -- block align sector\n");
+		result = -ERR_FAIL;
+		return result;
+	}
+
+	result = -ERR_NO;
+	return result;
+}
+
+void print_struct(void const *vp, size_t n) {
+    unsigned char const *p = vp;
+    size_t i;
+    for (i = 0; i < n; i++)
+        printf("%02X\n", p[i]);
+    putchar('\n');
+};

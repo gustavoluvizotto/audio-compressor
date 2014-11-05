@@ -22,6 +22,6 @@ typedef struct tree_s {
 
 void tree_create(tree_t *tree);	/* init tree */
 node_t* create_node_tree();
-void in_order(node_t *);	/* in order print */
+void in_order(node_t *);		/* in order print */
 
 #endif /* INC_TREE_H_ */

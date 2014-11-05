@@ -38,6 +38,6 @@ typedef struct {
 } data_chunk_t;
 #pragma pack (pop)
 
-uint8_t *data;              	/* little   */
+uint8_t *data_sample;			/* little  	*/
 
 #endif /* INC_WAV_H_ */

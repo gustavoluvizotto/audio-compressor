@@ -20,8 +20,8 @@ typedef struct {
     queue_node_t *begin, *end;
 } queue_t;
 
-void queue_create(queue_t *);
-node_t* get_last_element_from_queue(queue_t *);
-void insert_node_queue(queue_t *, node_t*);
+queue_t* queue_create();
+node_t* get_last_element_from_queue(queue_t **);
+void insert_node_queue(queue_t **, node_t*);
 
 #endif /* INC_QUEUE_H_ */
