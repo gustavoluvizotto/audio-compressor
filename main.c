@@ -112,7 +112,7 @@ uint8_t search_for_equal_element(int list[], int size, int key) {
 	  return found;
 }
 
-result_t compress() {
+result_t compress(char out_file[]) {
 	size_t i, j;					/* index */
 	int ans = 1;					/* answer of the user about compress modes */
 	int modes[3];					/* modes of compress */
@@ -125,9 +125,12 @@ result_t compress() {
 	num_channels = fmt_chunk.num_channels;
 	TRACE("Number of channels in the audio: %hu\n", num_channels);
 
+	data_size_channel = number_of_samples/num_channels;
+	TRACE("Number of samples per channel: %u\n", data_size_channel);
+
 	huffman_tree = (tree_t**) malloc(num_channels * sizeof(tree_t*));
 	for (i = 0; i < num_channels; i++) {
-		tree_create(huffman_tree[i]);
+		tree_create(&huffman_tree[i]);
 	}
 
 	printf("Choose the compression you want\n");
@@ -147,9 +150,6 @@ result_t compress() {
 		}
 	} while (ans != 0 && i < 3);
 
-	data_size_channel = number_of_samples/num_channels;
-	TRACE("Number of samples per channel: %u", data_size_channel);
-
 	data_adjusted = (uint8_t**) malloc(num_channels * sizeof(uint8_t*));
 
 	for (i = 0; i < num_channels; i++) {
@@ -165,7 +165,9 @@ result_t compress() {
 		switch (modes[i]) {
 		case 1:
 			for (j = 0; j < num_channels; j++) {
+				TRACE("Comprresing by Huffman...\n");
 				huffman_tree[j]->root = comprimir_huffman(data_adjusted[j], number_of_samples);
+				TRACE("Huffman compress for channel %zd successfull!\n", j+1);
 			}
 			break;
 		case 2:
@@ -179,19 +181,24 @@ result_t compress() {
 			break;
 		}
 	}
-
-	for (i = 0; i < num_channels; i++) {
-		in_order(huffman_tree[i]->root);
+	TRACE("Writing in the output file...\n");
+	result = write_header_to_file(out_file, fmt_chunk);
+	TRACE("Common header has been written!\n");
+	TRACE("Writing compressed bytes...\n");
+	for (j = 0; j < num_channels; j++) {
+		result = write_huffman(huffman_tree[j]->root, data_adjusted[j], out_file, number_of_samples);
 	}
+	TRACE("Compressed bytes have been written!\n");
+	TRACE("Output file has been written!\n");
 
-	result = -ERR_NO;
 	return result;
 }
 
 int main () {
-	char in_file[40] = "";					/* input file to read */
+	char in_file[40] = "";						/* input file to read */
 	result_t result = -ERR_NO;				/* return functions */
 	char mode;								/* compress/decompress mode */
+	char out_file[40] = "";
 
 	printf("Choose compress(c) or decompress(d): ");
 	scanf("%c", &mode);
@@ -223,6 +230,8 @@ int main () {
 		return result;
 	}
 
+	strncat(out_file, in_file, strlen(in_file));
+	strncat(out_file, ".bin", strlen(".bin"));
 	if (mode == 'c') {
 		if (fmt_chunk.audio_format != 1) {
 			printf("Compressed file!\n");
@@ -230,7 +239,7 @@ int main () {
 			system_pause();
 			return result;
 		}
-		result = compress();
+		result = compress(out_file);
 	} else {
 		TRACE("Decompress mode \n");
 	}
