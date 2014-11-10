@@ -36,12 +36,14 @@ void itoa(int n, char s[]) {
 }
 
 char *byte_to_binary(uint8_t x){
-    static char b[9];
-    b[0] = '\0';
+    char *b;
     uint8_t z;
 
+    b = (char*) malloc(sizeof(char) * (MAX_BITS + 1));
+    memset(b, '\0', sizeof(char) * (MAX_BITS + 1));
+
     for (z = 128; z > 0; z >>= 1){
-        strcat(b, ((x & z) == z) ? "1" : "0");
+        strncat(b, ((x & z) == z) ? "1" : "0", sizeof(char));
     }
 
     return b;

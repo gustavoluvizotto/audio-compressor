@@ -43,14 +43,14 @@ node_t* get_last_element_from_queue(queue_t **queue) {
     }
 }
 
-void insert_node_queue(queue_t **queue, node_t *n) {
-    if (*queue && (*queue)->begin && n) {
+void insert_node_queue(queue_t **queue, node_t *z) {
+    if (*queue && (*queue)->begin && z) {
         queue_node_t *p = (*queue)->begin;
-        while (p && n->frequency < (p->node)->frequency) {
+        while (p && z->frequency < (p->node)->frequency) {
         		p = p->next;
         }
         queue_node_t *aux = (queue_node_t*) malloc (sizeof(queue_node_t));
-        aux->node = n;
+        aux->node = z;
         if (p == NULL) {
             aux->previous = (*queue)->end;
             aux->next = NULL;
@@ -70,9 +70,9 @@ void insert_node_queue(queue_t **queue, node_t *n) {
 			}
         }
     } else {
-    	if (*queue && n) {
+    	if (*queue && z) {
 			queue_node_t *p = (queue_node_t*) malloc (sizeof(queue_node_t));
-			p->node = n;
+			p->node = z;
 			p->next = NULL;
 			p->previous = NULL;
 			(*queue)->begin = p;

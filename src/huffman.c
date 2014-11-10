@@ -6,8 +6,11 @@
  */
 
 #include "../inc/huffman.h"
-
-node_t* huffman(uint32_t *frequency) {
+/*
+#undef TRACE
+#define TRACE(fmt, ...)
+*/
+node_t* huffman(uint16_t *frequency) {
     int i;														/* index */
     char *aux = (char*) malloc (sizeof(char) * (MAXSIZE + 1));	/* intermediare sample */
     node_t *x, *y;												/* min frequencies from queue */
@@ -25,8 +28,8 @@ node_t* huffman(uint32_t *frequency) {
             memset(aux, '\0', sizeof(char) * (MAXSIZE + 1));
         	sprintf(aux, "/%d", i);
             z = create_node_tree();
-            z->sample = (char*) malloc (sizeof(char) * 5);
-            memset(z->sample, '\0', sizeof(char) * 5);
+            z->sample = (char*) malloc (sizeof(char) * MAX_LENGHT_SAMPLE);
+            memset(z->sample, '\0', sizeof(char) * MAX_LENGHT_SAMPLE);
             strncpy(z->sample, aux, strlen(aux));
             z->frequency = frequency[i];
             insert_node_queue(&queue, z);
@@ -72,9 +75,8 @@ node_t* huffman(uint32_t *frequency) {
  */
 node_t* comprimir_huffman(uint8_t *data, uint32_t number_of_samples) {
 	size_t i;								/* loop indexes */
-	uint32_t *frequency;					/* frequency of given data[i] */
 
-	frequency = (uint32_t*) malloc (MAX_SAMPLE * sizeof(uint32_t));
+	frequency = (uint16_t*) malloc (MAX_SAMPLE * sizeof(uint16_t));
 	for (i = 0; i < MAX_SAMPLE; i++) {
 		frequency[i] = 0;
 	}
@@ -92,17 +94,14 @@ node_t* comprimir_huffman(uint8_t *data, uint32_t number_of_samples) {
  */
 result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t number_of_samples) {
 	unsigned char c;					/* Used to store each byte to be written on file */
-	char* code;							/* Huffman code */
+	char* code = NULL;					/* Huffman code */
 	size_t i, j;						/* Indexes */
-	size_t size = sizeof(data);			/* Size of the samples */
-	int bits = 0;						/* Used to control the number of bits in byte c */
+	uint8_t k;							/* Index to write in the file */
+	uint8_t bits = 0;					/* Used to control the number of bits in byte c */
 	char** binaries;					/* Samples in binaries */
 	result_t result;					/* Return result */
-	uint32_t *frequency;				/* frequency of given data[i] */
 
-	code = (char*) malloc(MAX_HUFF_CODE * sizeof(char));
-
-	binaries = (char**) malloc(size * sizeof(char*));
+	binaries = (char**) malloc(number_of_samples * sizeof(char*));
 
 	FILE *fp = fopen(out_file, "wb");
 	if (fp == NULL) {
@@ -118,34 +117,25 @@ result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t nu
 		return result;
 	}
 
-	frequency = (uint32_t*) malloc (MAX_SAMPLE * sizeof(uint32_t));
-	for (i = 0; i < MAX_SAMPLE; i++) {
-		frequency[i] = 0;
-	}
-	/* begin the frequency count */
-	for (i = 0; i < number_of_samples; i++) {
-		frequency[data[i]]++;
-	}
-
 	/* Writing Huffman header */
-	for (i = 0; i < size; i++) {
-		if (frequency[i] == 0) {
-			fwrite(&frequency[i], sizeof(uint32_t), 1, fp);
-			fwrite(&i, sizeof(size_t), 1, fp);
+	for (k = 0; k < MAX_SAMPLE; k++) {
+		if (frequency[k] == 0) {
+			fwrite(&frequency[k], sizeof(uint16_t), 1, fp);
+			fwrite(&k, sizeof(uint8_t), 1, fp);
 		}
 	}
 
-	for (i = 0; i < size; i++) {
+	for (i = 0; i < number_of_samples; i++) {
 		binaries[i] = byte_to_binary(data[i]);
 	}
 
 	/* For each sample, write the Huffman code and sample itself */
 	c = 0;
-	for(i = 0; i < size; i++) {
-		strncpy(code, "\0", sizeof(char));
+	for(i = 0; i < number_of_samples; i++) {
 		code = get_code(root, data[i]); /* Obtain the huffman code for data[i] */
+		TRACE("Code: %8s, Datum: %02X\n", code, data[i]);
 		/* Write the huffman code in char c. Shift every character of code in bits of c */
-		for(j = 0; j < strlen(code) && j != '\0'; j++) {
+		for(j = 0; j < strlen(code); j++) {
 			if(code[j] == '1') {
 				c <<= 1;
 				c += 1;
@@ -159,7 +149,7 @@ result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t nu
 			}
 		}
 		/* Write the sample in binary mode, like in the huffman code */
-		for(j = 0; j < data[i]; j++) {
+		for(j = 0; j < MAX_BITS; j++) {
 			if(binaries[i][j] == '1') {
 				c <<= 1;
 				c += 1;
@@ -182,11 +172,11 @@ result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t nu
 			i++;
 		}
 		fwrite(&c, sizeof(unsigned char), 1, fp); 		/* write the last c byte */
-		fwrite(&bits, sizeof(unsigned char), 1, fp); 	/* write the number of bits of the last c byte without stuffing 0 */
+		fwrite(&bits, sizeof(uint8_t), 1, fp); 			/* write the number of bits of the last c byte without stuffing 0 */
 	}
 
 	/* free memory and close file */
-	for (i = 0; i < size; i++) {
+	for (i = 0; i < number_of_samples; i++) {
 		free(binaries[i]);
 	}
 	free(binaries);
@@ -200,14 +190,15 @@ result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t nu
 /*
  * Obtains the Huffman code of a sample
  */
-char* get_code (node_t* p, uint8_t data) {
-	char* code = NULL;
-	char* string_data = (char*) malloc(sizeof(char) * 5);
+char* get_code (node_t* root, uint8_t data) {
+	char* code = (char*) malloc(sizeof(char) * MAX_HUFF_CODE);
+	char* string_data = (char*) malloc(sizeof(char) * MAX_LENGHT_SAMPLE);
 
+	memset(code, '\0', sizeof(char) * MAX_HUFF_CODE);
+	memset(string_data, '\0', sizeof(char) * MAX_LENGHT_SAMPLE);
 	sprintf(string_data, "/%d", data);
-	strncat(string_data, "\0", sizeof(char));
 
-	huffman_code(p, string_data, code);
+	huffman_code(root, string_data, code);
 
 	return code;
 }
@@ -216,22 +207,22 @@ char* get_code (node_t* p, uint8_t data) {
  * Recursive function that get the huffman code of a data and put into code.
  * Runs the huffman tree, add (strcat) "0" for left branch and "1" to right branch.
  */
-void huffman_code (node_t* p, char* data, char* code) {
-    if (p == NULL || code == NULL) {
+void huffman_code (node_t* root, char* data, char* code) {
+    if (root == NULL || code == NULL) {
     	return;
     }
-    if (strstr(p->sample, data) == NULL) {
+    if (strstr(root->sample, data) == NULL) {
     	return;
     }
-    if (strlen(p->sample) <= 5) {
+    if (strlen(root->sample) <= MAX_LENGHT_SAMPLE) {
     	return;
     } else {
-        if (strstr(p->left->sample, data)) {
+        if (strstr(root->left->sample, data)) {
             strcat(code, "0");
-            huffman_code(p->left, data, code);
-        } else if (strstr(p->right->sample, data)) {
+            huffman_code(root->left, data, code);
+        } else if (strstr(root->right->sample, data)) {
             strcat(code, "1");
-            huffman_code(p->right, data, code);
+            huffman_code(root->right, data, code);
         }
     }
 }

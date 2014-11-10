@@ -32,7 +32,7 @@
 #define MAX_SAMPLE 255		/* may we need to change 510? (255 (negative numbers) + 1 (zero) + 255 (positive numbers)) */
 #define	MAXSIZE 1275		/* 255*5. If every sample apear in the .wav file. 5 characters will be add per sample */
 
-#define MAX_HUFF_CODE 128	/* max lenght of a huffman code (per data) */
+#define MAX_LENGHT_SAMPLE 5
 
 #define MAX_BITS 8			/* max number of bits of a data (data of 8 bits?) */
 
