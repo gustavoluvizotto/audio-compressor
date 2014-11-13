@@ -221,7 +221,7 @@ result_t compress(char out_file[]) {
 		case 1:
 			for (j = 0; j < num_channels; j++) {
 				TRACE("Comprresing by Huffman...\n");
-				huffman_tree[j]->root = comprimir_huffman(data_adjusted[j], number_of_samples);
+				huffman_tree[j]->root = comprimir_huffman(data_adjusted[j], data_size_channel);
 				TRACE("Huffman compress for channel %zd successfull!\n", j+1);
 			}
 			break;
@@ -239,9 +239,9 @@ result_t compress(char out_file[]) {
 	TRACE("Writing in the output file...\n");
 	result = write_header_to_file(out_file, fmt_chunk, c);
 	TRACE("Common header has been written!\n");
-	TRACE("Writing compressed bytes...\n");
+	TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
 	for (j = 0; j < num_channels; j++) {
-		result = write_huffman(huffman_tree[j]->root, data_adjusted[j], out_file, number_of_samples);
+		result = write_huffman(huffman_tree[j]->root, data_adjusted[j], out_file, data_size_channel);
 	}
 	TRACE("Compressed bytes have been written!\n");
 	TRACE("Output file has been written!\n");
@@ -272,7 +272,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/pig.wav");
+	strcpy(in_file, "resources/duck.wav");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {
