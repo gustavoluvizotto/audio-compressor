@@ -47,15 +47,18 @@ void insert_node_queue(queue_t **queue, node_t *z) {
     if (*queue && (*queue)->begin && z) {
         queue_node_t *p = (*queue)->begin;
         while (p && z->frequency < (p->node)->frequency) {
+        	if (p->next != NULL)
         		p = p->next;
+        	else
+        		break;
         }
         queue_node_t *aux = (queue_node_t*) malloc (sizeof(queue_node_t));
         aux->node = z;
-        if (p == NULL) {
+        if (p->next == NULL) {
             aux->previous = (*queue)->end;
             aux->next = NULL;
             (*queue)->end = aux;
-            (*queue)->begin->next = aux;
+            p->next = aux;
         } else {
         	if (p != (*queue)->begin) {
 				p->previous->next = aux;

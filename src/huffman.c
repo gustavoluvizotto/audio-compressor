@@ -8,10 +8,10 @@
  */
 
 #include "../inc/huffman.h"
-/*
+
 #undef TRACE
 #define TRACE(fmt, ...)
-*/
+
 node_t* huffman(uint16_t *frequency) {
     int i;														/* index */
     char *aux = (char*) malloc (sizeof(char) * (MAXSIZE + 1));	/* intermediare sample */
