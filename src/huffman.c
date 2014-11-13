@@ -3,6 +3,8 @@
  *
  *  Created on: Nov 1, 2014
  *      Author: gustavo
+ *
+ *  TODO Write the huffman header (frequencies) in binary mode, i.e., convert the uint16_t frequency type in binary string and discart the first zeros (save only the essential data).
  */
 
 #include "../inc/huffman.h"
@@ -44,7 +46,7 @@ node_t* huffman(uint16_t *frequency) {
      */
     while (queue->count > 1) {
         memset(aux, '\0', sizeof(char) * (MAXSIZE + 1));
-		x = get_last_element_from_queue(&queue);
+        x = get_last_element_from_queue(&queue);
         y = get_last_element_from_queue(&queue);
         strcpy(aux, x->sample);
         strcat(aux, y->sample);
@@ -148,20 +150,6 @@ result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t nu
 				bits = 0;
 			}
 		}
-		/* Write the sample in binary mode, like in the huffman code */
-		for(j = 0; j < MAX_BITS; j++) {
-			if(binaries[i][j] == '1') {
-				c <<= 1;
-				c += 1;
-			} else
-				c <<= 1;
-			bits++;
-			if(bits == 8) {
-				fwrite(&c, sizeof(unsigned char), 1, fp);
-				c = 0;
-				bits = 0;
-			}
-		}
 	}
 
 	/* If bits < 8, then complete with zeros the rest of char c */
@@ -214,15 +202,23 @@ void huffman_code (node_t* root, char* data, char* code) {
     if (strstr(root->sample, data) == NULL) {
     	return;
     }
-    if (strlen(root->sample) <= MAX_LENGHT_SAMPLE) {
+    if (count_ocurrencies(root->sample, '/') == 1) {
     	return;
     } else {
         if (strstr(root->left->sample, data)) {
-            strcat(code, "0");
+            strncat(code, "0", strlen("0"));
             huffman_code(root->left, data, code);
         } else if (strstr(root->right->sample, data)) {
-            strcat(code, "1");
+            strncat(code, "1", strlen("1"));
             huffman_code(root->right, data, code);
         }
     }
+}
+
+int count_ocurrencies(char* str, char c) {
+	int i;
+
+	for (i = 0; str[i] != '\0'; str[i] == c ? i++ : *str++);
+
+	return i;
 }

@@ -30,9 +30,10 @@
 #define	FALSE 0
 
 #define MAX_SAMPLE 255		/* may we need to change 510? (255 (negative numbers) + 1 (zero) + 255 (positive numbers)) */
-#define	MAXSIZE 1275		/* 255*5. If every sample apear in the .wav file. 5 characters will be add per sample */
 
 #define MAX_LENGHT_SAMPLE 5
+
+#define	MAXSIZE MAX_SAMPLE*MAX_LENGHT_SAMPLE	/* If every sample apear in the .wav file. 5 characters will be add per sample. For Huffman codification */
 
 #define MAX_BITS 8			/* max number of bits of a data (data of 8 bits?) */
 
@@ -42,20 +43,32 @@ typedef int8_t result_t;
 
 void print_struct(void const *vp, size_t n);
 
-typedef struct {
-	unsigned bit0:1;
-	unsigned bit1:1;
-	unsigned bit2:1;
-	unsigned bit3:1;
-	unsigned bit4:1;
-	unsigned bit5:1;
-	unsigned bit6:1;
-	unsigned bit7:1;
-} byte_t;
-
 void reverse(char s[]);
 void itoa(int n, char s[]);
 char *byte_to_binary(uint8_t x);
-result_t write_header_to_file(char *out_file, fmt_chunk_t fmt_chunk);
+
+/*
+ * Combinations of codification modes and the binary representative
+ *    H 0001
+ *    D 0010
+ *    M 0011
+ *   HD 0100
+ *  HDM 0101
+ *   HM 0110
+ *  HMD 0111
+ *   DH 1000
+ *  DHM 1001
+ *   DM 1010
+ *  DMH 1011
+ *   MD 1100
+ *  MDH 1101
+ *   MH 1110
+ *  MHD 1111
+ *
+ *  H = Huffman
+ *  D = Differences
+ *  M = MDCT
+ */
+result_t write_header_to_file(char *out_file, fmt_chunk_t fmt_chunk, unsigned char c);
 
 #endif /* INC_COMMON_H_ */

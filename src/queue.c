@@ -55,7 +55,7 @@ void insert_node_queue(queue_t **queue, node_t *z) {
             aux->previous = (*queue)->end;
             aux->next = NULL;
             (*queue)->end = aux;
-            /*queue->begin->next = aux;*/
+            (*queue)->begin->next = aux;
         } else {
         	if (p != (*queue)->begin) {
 				p->previous->next = aux;

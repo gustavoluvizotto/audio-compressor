@@ -49,7 +49,7 @@ char *byte_to_binary(uint8_t x){
     return b;
 }
 
-result_t write_header_to_file(char *out_file, fmt_chunk_t fmt_chunk) {
+result_t write_header_to_file(char *out_file, fmt_chunk_t fmt_chunk, unsigned char c) {
 	FILE *fp;
 	size_t writing;
 	result_t result;
@@ -61,9 +61,11 @@ result_t write_header_to_file(char *out_file, fmt_chunk_t fmt_chunk) {
 		return result;
 	}
 
-	writing = fwrite(&fmt_chunk.num_channels, sizeof(uint16_t), 1, fp);
+	c <<= 4;
+	c += fmt_chunk.num_channels - 1;
+	writing = fwrite(&c, sizeof(unsigned char), 1, fp);
 	if (writing != 1) {
-		TRACE("Error to write in the file -- num channels sector\n");
+		TRACE("Error to write in the file -- num channels and mode sector\n");
 		result = -ERR_FAIL;
 		return result;
 	}
@@ -71,20 +73,6 @@ result_t write_header_to_file(char *out_file, fmt_chunk_t fmt_chunk) {
 	writing = fwrite(&fmt_chunk.sample_rate, sizeof(uint32_t), 1, fp);
 	if (writing != 1) {
 		TRACE("Error to write in the file -- sample rate sector\n");
-		result = -ERR_FAIL;
-		return result;
-	}
-
-	writing = fwrite(&fmt_chunk.byte_rate, sizeof(uint32_t), 1, fp);
-	if (writing != 1) {
-		TRACE("Error to write in the file -- byte rate sector\n");
-		result = -ERR_FAIL;
-		return result;
-	}
-
-	writing = fwrite(&fmt_chunk.block_align, sizeof(uint16_t), 1, fp);
-	if (writing != 1) {
-		TRACE("Error to write in the file -- block align sector\n");
 		result = -ERR_FAIL;
 		return result;
 	}

@@ -3,6 +3,12 @@
  *
  *  Created on: Oct 28, 2014
  *      Author: gustavo
+ *
+ *  Definitions:
+ *  	Bits per sample = 8
+ *  	Block align = NumChannels
+ *  	ByteRate = SampleRate * NumChannels
+ *  	Max(NumChannels) = 16
  */
 
 #include "inc/wav.h"
@@ -121,6 +127,7 @@ result_t compress(char out_file[]) {
 	tree_t **huffman_tree = NULL;	/* one huffman tree per channel */
 	result_t result;				/* return result */
 	uint16_t num_channels;
+	unsigned char c = 0;
 
 	num_channels = fmt_chunk.num_channels;
 	TRACE("Number of channels in the audio: %hu\n", num_channels);
@@ -146,9 +153,57 @@ result_t compress(char out_file[]) {
 		if (search_for_equal_element(modes, 3, ans)) {
 			printf("Select a different compression mode!\n");
 		} else {
+			switch(ans) {
+			case 1:
+				if (i == 0) {
+					c += 1;
+				} else {
+					if (i == 1) {
+						c <<= 2;
+						if (modes[i-1] == 3) {
+							c += 2;
+						}
+					} else {
+						c += 1;
+					}
+				}
+				break;
+			case 2:
+				if (i == 0) {
+					c += 2;
+				} else {
+					if (i == 1) {
+						c <<= 2;
+					} else {
+						c += 1;
+					}
+				}
+				break;
+			case 3:
+				if (i == 0) {
+					c += 3;
+				} else {
+					if (i == 1) {
+						c <<= 2;
+						c += 2;
+					} else {
+						c += 1;
+					}
+				}
+				break;
+			default:	/* Exit case (0) */
+				break;
+			}
 			modes[i++] = ans;
 		}
 	} while (ans != 0 && i < 3);
+
+	if (modes[0] == 0) {
+		result = -ERR_NO;
+		TRACE("Run again and choose one compression mode\n");
+		system_pause();
+		return result;
+	}
 
 	data_adjusted = (uint8_t**) malloc(num_channels * sizeof(uint8_t*));
 
@@ -182,7 +237,7 @@ result_t compress(char out_file[]) {
 		}
 	}
 	TRACE("Writing in the output file...\n");
-	result = write_header_to_file(out_file, fmt_chunk);
+	result = write_header_to_file(out_file, fmt_chunk, c);
 	TRACE("Common header has been written!\n");
 	TRACE("Writing compressed bytes...\n");
 	for (j = 0; j < num_channels; j++) {
@@ -195,13 +250,14 @@ result_t compress(char out_file[]) {
 }
 
 int main () {
-	char in_file[40] = "";						/* input file to read */
+	char in_file[40] = "";					/* input file to read */
 	result_t result = -ERR_NO;				/* return functions */
 	char mode;								/* compress/decompress mode */
 	char out_file[40] = "";
 
 	printf("Choose compress(c) or decompress(d): ");
-	scanf("%c", &mode);
+	/*scanf("%c", &mode);*/
+	mode = 'c';
 
 	if (mode == 'c') {
 		printf("Enter with the path and name of the sound file (including the .wav extension: ");
@@ -215,8 +271,8 @@ int main () {
 		}
 	}
 	fflush(stdin);
-	scanf("%s", in_file);
-
+	/*scanf("%s", in_file);*/
+	strcpy(in_file, "resources/pig.wav");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {
@@ -225,6 +281,20 @@ int main () {
 
 	if (result == -ERR_FAIL) {
 		printf("Wrong path/file/extension or file doesn't exist!\n");
+		result = -ERR_FAIL;
+		system_pause();
+		return result;
+	}
+
+	if (fmt_chunk.bits_per_sample != 8) {
+		TRACE("Bits per sample not valid. This application accepts only 8 bits per sample!\n");
+		result = -ERR_FAIL;
+		system_pause();
+		return result;
+	}
+
+	if (fmt_chunk.num_channels > 16) {
+		TRACE("Number of channels exceed the limits. Max is 16!\n");
 		result = -ERR_FAIL;
 		system_pause();
 		return result;
