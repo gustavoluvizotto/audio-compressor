@@ -49,7 +49,7 @@ char *byte_to_binary(uint8_t x){
     return b;
 }
 
-result_t write_header_to_file(char *out_file, fmt_chunk_t fmt_chunk, unsigned char c) {
+result_t write_header_to_file(char *out_file, riff_chunk_t riff_chunk, fmt_chunk_t fmt_chunk, unsigned char c) {
 	FILE *fp;
 	size_t writing;
 	result_t result;
@@ -67,6 +67,15 @@ result_t write_header_to_file(char *out_file, fmt_chunk_t fmt_chunk, unsigned ch
 	if (writing != 1) {
 		TRACE("Error to write in the file -- num channels and mode sector\n");
 		result = -ERR_FAIL;
+		fclose(fp);
+		return result;
+	}
+
+	writing = fwrite(&riff_chunk.chunk_size, sizeof(uint32_t), 1, fp);
+	if (writing != 1) {
+		TRACE("Error to write in the file -- chunk size sector\n");
+		result = -ERR_FAIL;
+		fclose(fp);
 		return result;
 	}
 
@@ -74,9 +83,11 @@ result_t write_header_to_file(char *out_file, fmt_chunk_t fmt_chunk, unsigned ch
 	if (writing != 1) {
 		TRACE("Error to write in the file -- sample rate sector\n");
 		result = -ERR_FAIL;
+		fclose(fp);
 		return result;
 	}
 
+	fclose(fp);
 	result = -ERR_NO;
 	return result;
 }

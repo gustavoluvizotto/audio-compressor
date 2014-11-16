@@ -69,6 +69,6 @@ char *byte_to_binary(uint8_t x);
  *  D = Differences
  *  M = MDCT
  */
-result_t write_header_to_file(char *out_file, fmt_chunk_t fmt_chunk, unsigned char c);
+result_t write_header_to_file(char *out_file, riff_chunk_t riff_chunk, fmt_chunk_t fmt_chunk, unsigned char c);
 
 #endif /* INC_COMMON_H_ */
