@@ -142,7 +142,7 @@ node_t* huffman(uint16_t *frequency) {
     for (i = 0; i <= MAX_SAMPLE; i++) {
         if (frequency[i] > 0) {
             memset(aux, '\0', sizeof(char) * (MAXSIZE + 1));
-        	sprintf(aux, "/%d", i);
+        	sprintf(aux, "/%d/", i);
             z = create_node_tree();
             z->sample = (char*) malloc (sizeof(char) * MAX_LENGHT_SAMPLE);
             memset(z->sample, '\0', sizeof(char) * MAX_LENGHT_SAMPLE);
@@ -306,7 +306,7 @@ char* get_code (node_t* root, uint8_t data) {
 
 	memset(code, '\0', sizeof(char) * MAX_HUFF_CODE);
 	memset(string_data, '\0', sizeof(char) * MAX_LENGHT_SAMPLE);
-	sprintf(string_data, "/%d", data);
+	sprintf(string_data, "/%d/", data);
 
 	huffman_code(root, string_data, code);
 
@@ -324,7 +324,7 @@ void huffman_code (node_t* root, char* data, char* code) {
     if (strstr(root->sample, data) == NULL) {
     	return;
     }
-    if (count_ocurrencies(root->sample, '/') == 1) {
+    if (count_ocurrencies(root->sample, '/') == 2) {
     	return;
     } else {
         if (strstr(root->left->sample, data)) {

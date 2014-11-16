@@ -31,7 +31,7 @@
 
 #define MAX_SAMPLE 255		/* may we need to change 510? (255 (negative numbers) + 1 (zero) + 255 (positive numbers)) */
 
-#define MAX_LENGHT_SAMPLE 5
+#define MAX_LENGHT_SAMPLE 6
 
 #define	MAXSIZE MAX_SAMPLE*MAX_LENGHT_SAMPLE	/* If every sample apear in the .wav file. 5 characters will be add per sample. For Huffman codification */
 
