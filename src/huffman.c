@@ -38,7 +38,6 @@ result_t huffman_decompress(FILE *fp, table_t* table, uint32_t num_samples, char
 		result = -ERR_FAIL;
 		return result;
 	}
-	TRACE("bits: %d\n", bits);
 
 	reading = fread(&count, sizeof(uint8_t), 1, fp);
 	if (reading != 1) {
@@ -46,15 +45,13 @@ result_t huffman_decompress(FILE *fp, table_t* table, uint32_t num_samples, char
 		result = -ERR_FAIL;
 		return result;
 	}
-	TRACE("count: %d\n", count);
 
 	for (i = 0; i < count; i++) {
 		data = 0;
 		fread(&data, sizeof(uint8_t), 1, fp);
 		fread(&frequency[data], sizeof(uint16_t), 1, fp);
-		TRACE("Frequency: %d \tDatum: %02X\n", frequency[data], data);
 	}
-	return result;
+
 	table = (table_t*) malloc(count * sizeof(table_t));
 	for (i = 0; i < count; i++) {
 		table[i].code = (char*) malloc(MAX_HUFF_CODE * sizeof(char));
