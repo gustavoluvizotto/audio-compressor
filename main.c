@@ -337,12 +337,14 @@ result_t decompress(char* in_file) {
 	for (i = 0; i < 3; i++) {
 		switch(modes[i]) {
 			case 1:				/* Huffman compression */
+				printf("Huffman decompressing...\n");
 				for (j = 0; j < fmt_chunk.num_channels; j++) {
 					result = huffman_decompress(fp, &table[j], data_channel_size, codes[j]);
 					for (k = 0; k < data_channel_size; k++) {
 						data_sample[k + j*data_channel_size] = (uint8_t) search_code(table[j], codes[j][k]);
 					}
 				}
+				printf("Huffman decompress ok!\n");
 				break;
 			case 2:				/* Differences compression */
 				break;
@@ -364,24 +366,34 @@ result_t decompress(char* in_file) {
 		return result;
 	}
 
+	printf("Writing the common header of wav file...\n");
+	printf("Writing the riff chunk...\n");
 	writing = fwrite(&riff_chunk, sizeof(riff_chunk), 1, out_fp);
 	if (writing != 1) {
 		TRACE("[ERROR] Fail to write in the file -- riff sector\n");
 		result = -ERR_FAIL;
 		return result;
 	}
+	printf("Riff chunk has been written!\n");
+	printf("Writing the format chunk...\n");
 	writing = fwrite(&fmt_chunk, sizeof(fmt_chunk), 1, out_fp);
 	if (writing != 1) {
 		TRACE("[ERROR] Fail to write in the file -- fmt sector\n");
 		result = -ERR_FAIL;
 		return result;
 	}
+	printf("Format chunk has been written!\n");
+	printf("Writing the data chunk...\n");
 	writing = fwrite(&data_chunk, sizeof(data_chunk), 1, out_fp);
 	if (writing != 1) {
 		TRACE("[ERROR] Fail to write in the file -- data sector\n");
 		result = -ERR_FAIL;
 		return result;
 	}
+	printf("Data chunk has been written!\n");
+	printf("Common header of wav file has been written!\n");
+
+	printf("Writing the data samples...\n");
 	for (i = 0; i < data_channel_size; i++) {
 		writing = fwrite(&data_sample[i], sizeof(uint8_t), 1, out_fp);
 		if (writing != 1) {
@@ -390,6 +402,7 @@ result_t decompress(char* in_file) {
 			return result;
 		}
 	}
+	printf("Data samples has been written!\n");
 
 	fclose(fp);
 
@@ -419,11 +432,11 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/example.wav.bin");
+	strcpy(in_file, "resources/pig.wav.bin");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {
-		TRACE("Decompress mode!");
+		TRACE("Decompress mode!\n");
 	}
 
 	if (result == -ERR_FAIL) {
