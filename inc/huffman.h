@@ -15,11 +15,17 @@
 /*
 * Structure to store the huffman codes table for decompression.
 */
-typedef struct{
+typedef struct {
 	char* code;
 	uint32_t index;
+} row_t;
+
+typedef struct {
+	row_t *rows;
+	uint32_t lenght;
 } table_t;
 
+table_t huffman_table(uint16_t count);
 node_t* huffman(uint16_t *frequency);
 node_t* huffman_compress(uint8_t *data, uint32_t num_samples);
 result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t num_samples);
@@ -28,7 +34,7 @@ void huffman_code(node_t* root, char* data, char* code);
 int count_ocurrencies(char* str, char c);
 result_t huffman_decompress(FILE *fp, table_t* table, uint32_t num_samples, char** codes);
 void generate_table(node_t *root, table_t *table, uint16_t *frequency);
-uint8_t search_code(table_t *table, char *code);
+int search_code(table_t table, char *code);
 
 uint16_t *frequency;					/* frequency of given sample */
 

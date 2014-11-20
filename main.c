@@ -261,7 +261,7 @@ result_t decompress(char* in_file) {
 	size_t writing;
 	uint32_t data_channel_size;
 	char*** codes = NULL;
-	table_t** table = NULL;
+	table_t* table = NULL;
 	char* out_file;
 
 	/* creating template wav file */
@@ -323,10 +323,10 @@ result_t decompress(char* in_file) {
 
 	codes = (char***) malloc(fmt_chunk.num_channels * sizeof(char**));
 
-	table = (table_t**) malloc(fmt_chunk.num_channels * sizeof(table_t*));
+	table = (table_t*) malloc(fmt_chunk.num_channels * sizeof(table_t));
 	for (i = 0; i < fmt_chunk.num_channels; i++) {
 		codes[i] = (char**) malloc(data_channel_size * sizeof(char*));
-		table[i] = NULL;
+		table[i].rows = NULL;
 	}
 	for (i = 0; i < fmt_chunk.num_channels; i++) {
 		for (j = 0; j < data_channel_size; j++) {
@@ -338,9 +338,9 @@ result_t decompress(char* in_file) {
 		switch(modes[i]) {
 			case 1:				/* Huffman compression */
 				for (j = 0; j < fmt_chunk.num_channels; j++) {
-					result = huffman_decompress(fp, table[j], data_channel_size, codes[j]);
+					result = huffman_decompress(fp, &table[j], data_channel_size, codes[j]);
 					for (k = 0; k < data_channel_size; k++) {
-						data_sample[k + j*data_channel_size] = search_code(table[j], codes[j][k]);
+						data_sample[k + j*data_channel_size] = (uint8_t) search_code(table[j], codes[j][k]);
 					}
 				}
 				break;

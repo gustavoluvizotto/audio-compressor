@@ -13,8 +13,23 @@
 #undef TRACE
 #define TRACE(fmt, ...)
 */
-result_t huffman_decompress(FILE *fp, table_t* table, uint32_t num_samples, char** codes) {
-	uint8_t count;
+
+table_t huffman_table(uint16_t count) {
+	table_t table;
+	uint16_t i;
+
+	table.rows = (row_t*) malloc(count * sizeof(row_t));
+	table.lenght = count;
+	for (i = 0; i < count; i++) {
+		table.rows[i].code = (char*) malloc(MAX_HUFF_CODE * sizeof(char));
+		table.rows[i].index = 0;
+	}
+
+	return table;
+}
+
+result_t huffman_decompress(FILE *fp, table_t *table, uint32_t num_samples, char** codes) {
+	uint16_t count;
 	size_t reading;
 	size_t i, j = 0;
 	uint8_t data;
@@ -39,7 +54,7 @@ result_t huffman_decompress(FILE *fp, table_t* table, uint32_t num_samples, char
 		return result;
 	}
 
-	reading = fread(&count, sizeof(uint8_t), 1, fp);
+	reading = fread(&count, sizeof(uint16_t), 1, fp);
 	if (reading != 1) {
 		TRACE("[ERROR] Fail to read file -- frequency counter\n");
 		result = -ERR_FAIL;
@@ -52,11 +67,7 @@ result_t huffman_decompress(FILE *fp, table_t* table, uint32_t num_samples, char
 		fread(&frequency[data], sizeof(uint16_t), 1, fp);
 	}
 
-	table = (table_t*) malloc(count * sizeof(table_t));
-	for (i = 0; i < count; i++) {
-		table[i].code = (char*) malloc(MAX_HUFF_CODE * sizeof(char));
-		table[i].index = 0;
-	}
+	*table = huffman_table(count);
 
 	huffman_tree->root = huffman(frequency);
 	
@@ -68,8 +79,8 @@ result_t huffman_decompress(FILE *fp, table_t* table, uint32_t num_samples, char
 		/* read file until find a huffman code */
 		fread(&read_byte, sizeof(unsigned char), 1, fp);
 		for (i = 0; i < 8 && j < num_samples; i++) {
-			strncat(target, (read_byte >> 1) & 0x01 ? "1" : "0", sizeof(char));
-			if (search_code(table, target) != 0) {	/* found the huffman code? */
+			strncat(target, (read_byte >> (i+1)) & 0x01 ? "1" : "0", sizeof(char));
+			if (search_code(*table, target) != -1) {	/* found the huffman code? */
 				codes[j] = (char*) malloc((strlen(target) + 1) * sizeof(char));
 				memset(codes[j], '\0', (strlen(target) + 1) * sizeof(char));
 				strncpy(codes[j], target, strlen(target));
@@ -87,19 +98,17 @@ result_t huffman_decompress(FILE *fp, table_t* table, uint32_t num_samples, char
 /*
  * Search for code in the table of huffman codes.
  */
-uint8_t search_code(table_t *table, char *code){
-	uint8_t i;
-	uint8_t count = sizeof(table) / sizeof(table_t);
+int search_code(table_t table, char *code){
+	int i;
+	uint16_t count = table.lenght;
 
 	for(i = 0; i < count; i++) {
-		if(strcmp(table[i].code, code) == 0) {
+		if(strcmp(table.rows[i].code, code) == 0) {
 			return i;
 		}
 	}
-	if(strcmp(table[i].code, code) == 0) {
-		return i;
-	}
-	return 0;
+
+	return -1;
 }
 
 /*
@@ -110,16 +119,16 @@ void generate_table(node_t *root, table_t *table, uint16_t *frequency){
 	
 	for(i = 0; i < MAX_SAMPLE; i++){
 		if (frequency[i] > 0) {
-			table[j].index = i;
-			memset(table[j].code, '\0', MAX_HUFF_CODE * sizeof(char));
-			table[j].code = get_code(root, i);
+			(*table).rows[j].index = i;
+			memset((*table).rows[j].code, '\0', MAX_HUFF_CODE * sizeof(char));
+			(*table).rows[j].code = get_code(root, i);
 			j++;
 		}
 	}
 	if (frequency[i] > 0) {
-		table[j].index = i;
-		memset(table[j].code, '\0', MAX_HUFF_CODE * sizeof(char));
-		table[j].code = get_code(root, i);
+		(*table).rows[j].index = i;
+		memset((*table).rows[j].code, '\0', MAX_HUFF_CODE * sizeof(char));
+		(*table).rows[j].code = get_code(root, i);
 	}
 }
 
@@ -211,7 +220,7 @@ result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t nu
 	uint8_t bits = 0;					/* Used to control the number of bits in byte c */
 	char** binaries;					/* Samples in binaries */
 	result_t result;					/* Return result */
-	uint8_t count = 0;					/* Count number of frequencies differents from zero */
+	uint16_t count = 0;					/* Count number of frequencies differents from zero */
 
 	binaries = (char**) malloc(num_samples * sizeof(char*));
 
@@ -233,7 +242,7 @@ result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t nu
 	if (frequency[k] != 0) {
 		count++;
 	}
-	fwrite(&count, sizeof(uint8_t), 1, fp);
+	fwrite(&count, sizeof(uint16_t), 1, fp);
 	for (k = 0; k < MAX_SAMPLE; k++) {
 		if (frequency[k] != 0) {
 			fwrite(&k, sizeof(uint8_t), 1, fp);
