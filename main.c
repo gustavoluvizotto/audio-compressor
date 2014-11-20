@@ -319,7 +319,7 @@ result_t decompress(char* in_file) {
 	}
 
 	data_channel_size = data_chunk.sub_chunk2_size / fmt_chunk.num_channels;
-	data_sample = (uint8_t*) malloc(data_chunk.sub_chunk2_size * sizeof(uint8_t));
+	data_sample = (uint8_t*) malloc(data_channel_size * sizeof(uint8_t));
 
 	codes = (char***) malloc(fmt_chunk.num_channels * sizeof(char**));
 
@@ -382,7 +382,7 @@ result_t decompress(char* in_file) {
 		result = -ERR_FAIL;
 		return result;
 	}
-	for (i = 0; i < data_chunk.sub_chunk2_size; i++) {
+	for (i = 0; i < data_channel_size; i++) {
 		writing = fwrite(&data_sample[i], sizeof(uint8_t), 1, out_fp);
 		if (writing != 1) {
 			TRACE("[ERROR] Fail to write in the file -- sample sector\n");
