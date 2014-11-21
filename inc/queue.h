@@ -8,7 +8,7 @@
 #ifndef INC_QUEUE_H_
 #define INC_QUEUE_H_
 
-#include "tree.h"
+#include "./tree.h"
 
 typedef struct block {
     node_t* node;

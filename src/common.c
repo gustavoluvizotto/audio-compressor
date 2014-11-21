@@ -7,34 +7,6 @@
 
 #include "../inc/common.h"
 
-/* reverse:  reverse string s in place */
-void reverse(char s[]) {
-    int i, j;
-    char c;
-
-    for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
-        c = s[i];
-        s[i] = s[j];
-        s[j] = c;
-    }
-}
-
-/* itoa:  convert n to characters in s */
-void itoa(int n, char s[]) {
-    int i, sign;
-
-    if ((sign = n) < 0)  /* record sign */
-        n = -n;          /* make n positive */
-    i = 0;
-    do {       /* generate digits in reverse order */
-        s[i++] = n % 10 + '0';   /* get next digit */
-    } while ((n /= 10) > 0);     /* delete it */
-    if (sign < 0)
-        s[i++] = '-';
-    s[i] = '\0';
-    reverse(s);
-}
-
 char *byte_to_binary(uint8_t x){
     char *b;
     uint8_t z;
@@ -93,7 +65,7 @@ result_t write_header_to_file(char *out_file, riff_chunk_t riff_chunk, fmt_chunk
 }
 
 void print_struct(void const *vp, size_t n) {
-    unsigned char const *p = vp;
+    unsigned char const *p = (unsigned char*)vp;
     size_t i;
     for (i = 0; i < n; i++)
         printf("%02X\n", p[i]);

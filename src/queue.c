@@ -6,6 +6,8 @@
  */
 
 #include "../inc/queue.h"
+#include "../inc/tree.h"
+#include <stdlib.h>
 
 queue_t* queue_create() {
 	queue_t* queue = (queue_t*) malloc(sizeof(queue_t));

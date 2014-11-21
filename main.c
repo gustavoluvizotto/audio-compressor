@@ -13,9 +13,7 @@
  *  TODO Check for non-freed memory.
  */
 
-#include "inc/wav.h"
 #include "inc/common.h"
-#include "inc/huffman.h"
 #include <stdio.h>
 
 /*
@@ -417,7 +415,7 @@ int main () {
 
 	printf("Choose compress(c) or decompress(d): ");
 	/*scanf("%c", &mode);*/
-	mode = 'd';
+	mode = 'c';
 
 	if (mode == 'c') {
 		printf("Enter with the path and name of the sound file (including the .wav extension): ");
@@ -432,7 +430,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/pig.wav.bin");
+	strcpy(in_file, "resources/pig.wav");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {
