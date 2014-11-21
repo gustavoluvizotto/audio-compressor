@@ -13,7 +13,9 @@
  *  TODO Check for non-freed memory.
  */
 
+#include "inc/wav.h"
 #include "inc/common.h"
+#include "inc/huffman.h"
 #include <stdio.h>
 
 /*
@@ -430,7 +432,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/pig.wav");
+	strcpy(in_file, "resources/tiny.wav");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {

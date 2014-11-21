@@ -9,15 +9,10 @@
  */
 
 #include "../inc/huffman.h"
-#include "../inc/wav.h"
-#include "../inc/common.h"
-#include "../inc/huffman.h"
-#include "../inc/tree.h"
-#include "../inc/queue.h"
-
+/*
 #undef TRACE
 #define TRACE(fmt, ...)
-
+*/
 
 table_t huffman_table(uint16_t count) {
 	table_t table;

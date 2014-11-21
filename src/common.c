@@ -7,6 +7,18 @@
 
 #include "../inc/common.h"
 
+/* reverse:  reverse string s in place */
+void reverse(char s[]) {
+    int i, j;
+    char c;
+
+    for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
+        c = s[i];
+        s[i] = s[j];
+        s[j] = c;
+    }
+}
+
 char *byte_to_binary(uint8_t x){
     char *b;
     uint8_t z;
@@ -65,7 +77,7 @@ result_t write_header_to_file(char *out_file, riff_chunk_t riff_chunk, fmt_chunk
 }
 
 void print_struct(void const *vp, size_t n) {
-    unsigned char const *p = (unsigned char*)vp;
+    unsigned char const *p = vp;
     size_t i;
     for (i = 0; i < n; i++)
         printf("%02X\n", p[i]);

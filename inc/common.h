@@ -13,9 +13,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "wav.h"
-#include "huffman.h"
-#include "./tree.h"
-#include "./queue.h"
 
 #undef TRACE
 #define TRACE(fmt, ...) printf(fmt, ## __VA_ARGS__)
@@ -46,6 +43,7 @@ typedef int8_t result_t;
 
 void print_struct(void const *vp, size_t n);
 
+void reverse(char s[]);
 char *byte_to_binary(uint8_t x);
 
 /*

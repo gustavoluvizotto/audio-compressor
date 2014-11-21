@@ -8,8 +8,7 @@
 #ifndef INC_HUFFMAN_H_
 #define INC_HUFFMAN_H_
 
-#include "common.h"
-#include "./tree.h"
+#include "queue.h"
 
 #define MAX_HUFF_CODE 128	/* max lenght of a huffman code (per data) */
 

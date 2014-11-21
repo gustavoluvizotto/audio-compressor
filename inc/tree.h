@@ -8,7 +8,7 @@
 #ifndef INC_TREE_H_
 #define INC_TREE_H_
 
-#include <stdint.h>
+#include "common.h"
 
 typedef struct node_s {
     char *sample;
