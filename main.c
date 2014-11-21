@@ -272,7 +272,7 @@ result_t decompress(char* in_file) {
 	memset(fmt_chunk.sub_chunk1_id, '\0', 4 * sizeof(char));
 	strncpy(fmt_chunk.sub_chunk1_id, "fmt ", 4 * sizeof(char));
 	fmt_chunk.sub_chunk1_size = 16;
-	fmt_chunk.bits_per_sample = 0x0800;
+	fmt_chunk.bits_per_sample = 0x0008;
 	fmt_chunk.audio_format = 1;
 	memset(data_chunk.sub_chunk2_id, '\0', 4 * sizeof(char));
 	strncpy(data_chunk.sub_chunk2_id, "data", 4 * sizeof(char));
@@ -432,7 +432,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/pig.wav.bin");
+	strcpy(in_file, "resources/tiny.wav.bin");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {
