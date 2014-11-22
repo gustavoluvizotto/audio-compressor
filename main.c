@@ -221,7 +221,7 @@ result_t compress(char out_file[]) {
 		case 1:
 			for (j = 0; j < num_channels; j++) {
 				TRACE("Comprresing by Huffman...\n");
-				huffman_tree[j]->root = huffman_compress(data_adjusted[j], data_channel_size);
+				huffman_tree[j]->root = huffman_compress(data_adjusted[j], frequency, data_channel_size);
 				TRACE("Huffman compress for channel %zd successfull!\n", j+1);
 			}
 			break;

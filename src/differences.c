@@ -7,6 +7,7 @@
 
 #include "../inc/differences.h"
 
+
 void to_differences(uint8_t* data, int16_t* diff, uint32_t size) {
 	uint32_t i;
 	
@@ -64,13 +65,13 @@ void get_value_code(char* code, int16_t value) {
 }
 
 
-char* diff_compress(uint8_t *data, uint16_t* frequency, uint32_t num_samples) {
+char** diff_compress(uint8_t *data, uint16_t *frequency, uint32_t num_samples) {
 	size_t i;
 	tree_t huffman_tree;
-	uint8_t* sss;
-	int16_t* diff;
-	char* huffman_code, diff_code;
-	char** codes;
+	uint8_t *sss;
+	int16_t *diff;
+	char *huffman_code, *diff_code;
+	char **codes;
 
 	to_differences(data, diff, num_samples);
 
@@ -90,7 +91,7 @@ char* diff_compress(uint8_t *data, uint16_t* frequency, uint32_t num_samples) {
 		memset(codes[i], '\0', (strlen(huffman_code) + sss[i] + 1) * sizeof(char));
 		
 		if (strlen(huffman_code) + sss[i] > sizeof(diff_code_t) * 8 &&  i > 0) { /* Se o código exceder o número de bits esperado, usar o código do SSS com maior frequência. */
-			strcpy(codes[i], get_code(huffman_tree.root, max(frequency, MAX_SAMPLE)));
+			strcpy(codes[i], get_code(huffman_tree.root, max_frequency(frequency, MAX_SAMPLE)));
 		} else {
 		   	strcpy(codes[i], huffman_code);
 		   	
@@ -107,11 +108,11 @@ char* diff_compress(uint8_t *data, uint16_t* frequency, uint32_t num_samples) {
 	return codes;
 }
 
-uint8_t max(uint16_t* array, uint8_t lenght) {
+uint8_t max_frequency(uint16_t* array, uint8_t lenght) {
 	uint8_t i, max = 0;
 	
-	for(i = 0; i < length; i++) {
-		if (max < array[i];) {
+	for(i = 0; i < lenght; i++) {
+		if (max < array[i]) {
 			max = array[i];
 		}
 	}
