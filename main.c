@@ -121,7 +121,7 @@ uint8_t search_for_equal_element(int list[], int size, int key) {
 }
 
 result_t compress(char out_file[]) {
-	size_t i, j;					/* index */
+	size_t i, j, k;					/* index */
 	int ans = 1;					/* answer of the user about compress modes */
 	int modes[3];					/* modes of compress */
 	uint8_t **data_adjusted;		/* the input data per channel adjusted for every compression */
@@ -130,6 +130,7 @@ result_t compress(char out_file[]) {
 	result_t result;				/* return result */
 	uint16_t num_channels;
 	unsigned char c = 0;
+	uint16_t **frequency = NULL;	/* frequency of given sample */
 
 	num_channels = fmt_chunk.num_channels;
 	TRACE("Number of channels in the audio: %hu\n", num_channels);
@@ -221,9 +222,19 @@ result_t compress(char out_file[]) {
 	for (i = 0; i < 3; i++){
 		switch (modes[i]) {
 		case 1:
+			frequency = (uint16_t**) malloc(num_channels * sizeof(uint16_t*));
+			for (j = 0; j < num_channels; j++) {
+				frequency[j] = (uint16_t*) malloc ((MAX_SAMPLE + 1) * sizeof(uint16_t));
+			}
+			for (j = 0; j < num_channels; j ++) {
+				for (k = 0; k <= MAX_SAMPLE; k++) {
+					frequency[j][k] = 0;
+				}
+			}
+
 			for (j = 0; j < num_channels; j++) {
 				TRACE("Comprresing by Huffman...\n");
-				huffman_tree[j]->root = huffman_compress(data_adjusted[j], data_channel_size);
+				huffman_tree[j]->root = huffman_compress(data_adjusted[j], frequency[j], data_channel_size);
 				TRACE("Huffman compress for channel %zd successfull!\n", j+1);
 			}
 			break;
@@ -243,10 +254,18 @@ result_t compress(char out_file[]) {
 	TRACE("Common header has been written!\n");
 	TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
 	for (j = 0; j < num_channels; j++) {
-		result = write_huffman(huffman_tree[j]->root, data_adjusted[j], out_file, data_channel_size);
+		result = write_huffman(huffman_tree[j]->root, data_adjusted[j], frequency[j], out_file, data_channel_size);
 	}
 	TRACE("Compressed bytes have been written!\n");
 	TRACE("Output file has been written!\n");
+
+	/* free memory */
+	for (j = 0; j < num_channels; j++) {
+		free(data_adjusted[j]);
+	}
+	free(data_adjusted);
+	free(data_sample);
+	free(huffman_tree);
 
 	return result;
 }
@@ -263,6 +282,7 @@ result_t decompress(char* in_file) {
 	char*** codes = NULL;
 	table_t* table = NULL;
 	char* out_file;
+	uint16_t **frequency = NULL;	/* frequency of given sample */
 
 	/* creating template wav file */
 	memset(riff_chunk.chunk_id, '\0', 4 * sizeof(char));
@@ -338,8 +358,17 @@ result_t decompress(char* in_file) {
 		switch(modes[i]) {
 			case 1:				/* Huffman compression */
 				printf("Huffman decompressing...\n");
+
+				frequency = (uint16_t**) malloc(fmt_chunk.num_channels * sizeof(uint16_t*));
 				for (j = 0; j < fmt_chunk.num_channels; j++) {
-					result = huffman_decompress(fp, &table[j], data_channel_size, codes[j]);
+					frequency[j] = (uint16_t*) malloc (MAX_SAMPLE * sizeof(uint16_t));
+					for (k = 0; k <= MAX_SAMPLE; k++) {
+						frequency[j][k] = 0;
+					}
+				}
+
+				for (j = 0; j < fmt_chunk.num_channels; j++) {
+					result = huffman_decompress(fp, &table[j], frequency[j], data_channel_size, codes[j]);
 					for (k = 0; k < data_channel_size; k++) {
 						data_sample[k + j*data_channel_size] = (uint8_t) search_code(table[j], codes[j][k]);
 					}
