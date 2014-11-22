@@ -140,7 +140,7 @@ result_t compress(char out_file[]) {
 
 	huffman_tree = (tree_t**) malloc(num_channels * sizeof(tree_t*));
 	for (i = 0; i < num_channels; i++) {
-		tree_create(&huffman_tree[i]);
+		tree_create(huffman_tree[i]);
 	}
 
 	printf("Choose the compression you want\n");

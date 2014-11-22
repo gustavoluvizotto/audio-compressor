@@ -41,7 +41,7 @@ result_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint
 	uint32_t count_stored_codes;
 
 	huffman_tree = (tree_t*) malloc(sizeof(tree_t));
-	tree_create(&huffman_tree);
+	tree_create(huffman_tree);
 
 	reading = fread(&bits, sizeof(uint8_t), 1,fp);
 	if (reading != 1) {
@@ -166,8 +166,10 @@ node_t* huffman(uint16_t *__frequency) {
     char *aux = (char*) malloc (sizeof(char) * (MAXSIZE + 1));	/* intermediare sample */
     node_t *x, *y;												/* min frequencies from queue */
     node_t *z;													/* inserted node */
-    queue_t *queue = queue_create();							/* queue are the leaves elements of the tree */
+    queue_t *queue = NULL;										/* queue are the leaves elements of the tree */
 
+    queue = (queue_t*) malloc(sizeof(queue_t));
+	queue_create(queue);
     /*
      * In this step, we insert in the queue every frequency element. The sample element
      * is /SAMPLE/\0 format. Is our standard to store samples in the tree. In the next
@@ -183,7 +185,7 @@ node_t* huffman(uint16_t *__frequency) {
             memset(z->sample, '\0', sizeof(char) * MAX_LENGHT_SAMPLE);
             strncpy(z->sample, aux, strlen(aux));
             z->frequency = __frequency[i];
-            insert_node_queue(&queue, z);
+            insert_node_queue(queue, z);
         }
     }
 
@@ -195,8 +197,8 @@ node_t* huffman(uint16_t *__frequency) {
      */
     while (queue->count > 1) {
         memset(aux, '\0', sizeof(char) * (MAXSIZE + 1));
-        x = get_last_element_from_queue(&queue);
-        y = get_last_element_from_queue(&queue);
+        x = get_last_element_from_queue(queue);
+        y = get_last_element_from_queue(queue);
         strcpy(aux, x->sample);
         strcat(aux, y->sample);
         z = create_node_tree();
@@ -206,7 +208,7 @@ node_t* huffman(uint16_t *__frequency) {
         z->frequency = x->frequency + y->frequency;
         z->left = x;
         z->right = y;
-        insert_node_queue(&queue, z);
+        insert_node_queue(queue, z);
     }
     free(aux);
 
@@ -214,7 +216,7 @@ node_t* huffman(uint16_t *__frequency) {
      * last element of a queue is the last element inserted. I.e., the root element of
      * the huffman tree
      */
-    return get_last_element_from_queue(&queue);
+    return get_last_element_from_queue(queue);
 }
 
 /*

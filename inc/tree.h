@@ -20,7 +20,7 @@ typedef struct tree_s {
     node_t* root;
 } tree_t;
 
-void tree_create(tree_t **tree);	/* init tree */
+void tree_create(tree_t *tree);	/* init tree */
 node_t* create_node_tree();
 void in_order(node_t *);		/* in order print */
 

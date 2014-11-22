@@ -7,9 +7,9 @@
 
 #include "../inc/tree.h"
 
-void tree_create(tree_t **tree) {
-	(*tree) = (tree_t *) malloc (sizeof(tree_t));
-	(*tree)->root = NULL;
+void tree_create(tree_t *tree) {
+	tree = (tree_t *) malloc (sizeof(tree_t));
+	tree->root = NULL;
 	return;
 }
 
