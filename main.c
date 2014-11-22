@@ -126,7 +126,7 @@ result_t compress(char out_file[]) {
 	int modes[3];					/* modes of compress */
 	uint8_t **data_adjusted;		/* the input data per channel adjusted for every compression */
 	uint32_t data_channel_size;		/* lenght of *data vector per channel */
-	tree_t **huffman_tree = NULL;	/* one huffman tree per channel */
+	tree_t **huffman_tree;			/* one huffman tree per channel */
 	result_t result;				/* return result */
 	uint16_t num_channels;
 	unsigned char c = 0;
@@ -140,6 +140,7 @@ result_t compress(char out_file[]) {
 
 	huffman_tree = (tree_t**) malloc(num_channels * sizeof(tree_t*));
 	for (i = 0; i < num_channels; i++) {
+		huffman_tree[i] = (tree_t *) malloc (sizeof(tree_t));
 		tree_create(huffman_tree[i]);
 	}
 

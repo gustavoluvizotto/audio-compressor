@@ -180,7 +180,8 @@ node_t* huffman(uint16_t *__frequency) {
         if (__frequency[i] > 0) {
             memset(aux, '\0', sizeof(char) * (MAXSIZE + 1));
         	sprintf(aux, "/%d/", i);
-            z = create_node_tree();
+            z = (node_t *) malloc(sizeof(node_t));
+            create_node_tree(z);
             z->sample = (char*) malloc (sizeof(char) * MAX_LENGHT_SAMPLE);
             memset(z->sample, '\0', sizeof(char) * MAX_LENGHT_SAMPLE);
             strncpy(z->sample, aux, strlen(aux));
@@ -201,7 +202,8 @@ node_t* huffman(uint16_t *__frequency) {
         y = get_last_element_from_queue(queue);
         strcpy(aux, x->sample);
         strcat(aux, y->sample);
-        z = create_node_tree();
+        z = (node_t *) malloc(sizeof(node_t));
+        create_node_tree(z);
         z->sample = (char*) malloc (sizeof(char) * (strlen(aux) + 1));
         memset(z->sample, '\0', sizeof(char) * (strlen(aux) + 1));
         strncpy(z->sample, aux, strlen(aux));
@@ -210,7 +212,7 @@ node_t* huffman(uint16_t *__frequency) {
         z->right = y;
         insert_node_queue(queue, z);
     }
-    free(aux);
+    /*free(aux);*/
 
     /*
      * last element of a queue is the last element inserted. I.e., the root element of
@@ -225,7 +227,7 @@ node_t* huffman(uint16_t *__frequency) {
  * @brief Compress using huffman code.
  * @return the Huffman tree.
  */
-node_t* huffman_compress(uint8_t *data, uint16_t *_frequency, uint32_t num_samples) {
+node_t *huffman_compress(uint8_t *data, uint16_t *_frequency, uint32_t num_samples) {
 	size_t i;								/* loop indexes */
 
 	/* begin the frequency count */
