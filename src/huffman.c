@@ -29,7 +29,7 @@ table_t huffman_table(uint16_t count) {
 }
 
 result_t huffman_decompress(FILE *fp, table_t *table, uint32_t num_samples, char** codes) {
-	uint16_t count;
+	uint32_t count;
 	size_t reading;
 	size_t i, j = 0;
 	uint8_t data;
@@ -62,7 +62,7 @@ result_t huffman_decompress(FILE *fp, table_t *table, uint32_t num_samples, char
 		return result;
 	}
 
-	reading = fread(&count, sizeof(uint16_t), 1, fp);
+	reading = fread(&count, sizeof(uint32_t), 1, fp);
 	if (reading != 1) {
 		TRACE("[ERROR] Fail to read file -- frequency counter\n");
 		result = -ERR_FAIL;
@@ -88,19 +88,32 @@ result_t huffman_decompress(FILE *fp, table_t *table, uint32_t num_samples, char
 		fread(&read_byte, sizeof(unsigned char), 1, fp);
 		for (i = 0; i < 8 && j < num_samples; i++) {
 			strncat(target, (read_byte >> (7-i)) & 0x01 ? "1" : "0", sizeof(char));
-			if (search_code(*table, target) != -1) {	/* found the huffman code? */
+			if (search_tree_by_code(huffman_tree->root, target)) {	/* found the huffman code? */
 				codes[j] = (char*) malloc((strlen(target) + 1) * sizeof(char));
 				memset(codes[j], '\0', (strlen(target) + 1) * sizeof(char));
-				strncpy(codes[j], target, strlen(target));
+				strncpy(codes[j], target, strlen(target) * sizeof(char));
 				memset(target, '\0', MAX_HUFF_CODE * sizeof(char));
 				j++;
 			}
 		}
 	}
-	
 	free(huffman_tree);
 
 	return result;
+}
+
+int search_tree_by_code(node_t *node, char* code) {
+	if (node->left == NULL || node->right == NULL) {
+		return TRUE;
+	}
+	if (code[0] == '\0') {
+		return FALSE;
+	}
+	if (code[0] == '1') {
+		return search_tree_by_code(node->right, code+1);
+	} else {
+		return search_tree_by_code(node->left, code+1);
+	}
 }
 
 /*
@@ -111,7 +124,7 @@ int search_code(table_t table, char *code){
 	uint16_t count = table.lenght;
 
 	for(i = 0; i < count; i++) {
-		if(strcmp(table.rows[i].code, code) == 0) {
+		if(memcmp(table.rows[i].code, code, sizeof(table.rows[i].code)) == 0) {
 			return (int)(table.rows[i].index);
 		}
 	}
@@ -228,7 +241,7 @@ result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t nu
 	uint8_t bits = 0;					/* Used to control the number of bits in byte c */
 	char** binaries;					/* Samples in binaries */
 	result_t result;					/* Return result */
-	uint16_t count = 0;					/* Count number of frequencies differents from zero */
+	uint32_t count = 0;					/* Count number of frequencies differents from zero */
 	size_t size;
 	FILE *fp;
 	uint32_t count_stored_codes = 0;
@@ -264,7 +277,7 @@ result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t nu
 	if (frequency[k] != 0) {
 		count++;
 	}
-	fwrite(&count, sizeof(uint16_t), 1, fp);
+	fwrite(&count, sizeof(uint32_t), 1, fp);
 	for (k = 0; k < MAX_SAMPLE; k++) {
 		if (frequency[k] != 0) {
 			fwrite(&k, sizeof(uint8_t), 1, fp);
@@ -315,7 +328,6 @@ result_t write_huffman(node_t *root, uint8_t *data, char *out_file,  uint32_t nu
 		fwrite(&bits, sizeof(uint8_t), 1, fp); 			/* write the number of bits of the last c byte without stuffing 0 */
 		fwrite(&count_stored_codes, sizeof(uint32_t), 1, fp);
 	}
-
 	/* free memory and close file */
 	for (i = 0; i < num_samples; i++) {
 		free(binaries[i]);
