@@ -158,7 +158,7 @@ node_t* huffman(uint16_t *frequency) {
     char *aux = (char*) malloc (sizeof(char) * (MAXSIZE + 1));	/* intermediare sample */
     node_t *x, *y;												/* min frequencies from queue */
     node_t *z;													/* inserted node */
-    queue_t *queue = queue_create();							/* queue are the leaves elements of the tree */
+    queue_t *queue = queue_create();							/* queue consists of the leaf elements of the tree */
 
     /*
      * In this step, we insert in the queue every frequency element. The sample element
@@ -216,7 +216,7 @@ node_t* huffman(uint16_t *frequency) {
  * @brief Compress using huffman code.
  * @return the Huffman tree.
  */
-node_t* huffman_compress(uint8_t *data, uint32_t num_samples) {
+node_t* huffman_compress(uint8_t *data, uint16_t* frequency, uint32_t num_samples) {
 	size_t i;								/* loop indexes */
 
 	frequency = (uint16_t*) malloc ((MAX_SAMPLE + 1) * sizeof(uint16_t));
@@ -357,7 +357,7 @@ char* get_code (node_t* root, uint8_t data) {
 }
 
 /*
- * Recursive function that get the huffman code of a data and put into code.
+ * Recursive function that get the huffman code of data and put into code.
  * Runs the huffman tree, add (strcat) "0" for left branch and "1" to right branch.
  */
 void huffman_code (node_t* root, char* data, char* code) {

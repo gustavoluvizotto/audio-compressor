@@ -13,9 +13,7 @@
  *  TODO Check for non-freed memory.
  */
 
-#include "inc/wav.h"
-#include "inc/common.h"
-#include "inc/huffman.h"
+#include "inc/differences.h"
 #include <stdio.h>
 
 /*
