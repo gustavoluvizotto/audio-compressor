@@ -124,7 +124,7 @@ int search_code(table_t table, char *code){
 	uint16_t count = table.lenght;
 
 	for(i = 0; i < count; i++) {
-		if(memcmp(table.rows[i].code, code, sizeof(table.rows[i].code)) == 0) {
+		if(strcmp(table.rows[i].code, code) == 0) {
 			return (int)(table.rows[i].index);
 		}
 	}

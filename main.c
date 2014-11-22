@@ -432,7 +432,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/pig.wav.bin");
+	strcpy(in_file, "resources/upmono.wav.bin");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {
