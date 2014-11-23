@@ -459,7 +459,7 @@ int main () {
 
 	printf("Choose compress(c) or decompress(d): ");
 	/*scanf("%c", &mode);*/
-	mode = 'c';
+	mode = 'd';
 
 	if (mode == 'c') {
 		printf("Enter with the path and name of the sound file (including the .wav extension): ");
@@ -474,7 +474,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/example.wav");
+	strcpy(in_file, "resources/example.wav.bin");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {

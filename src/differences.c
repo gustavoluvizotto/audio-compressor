@@ -83,7 +83,6 @@ node_t* diff_compress(uint8_t *data, uint16_t *_frequency, char **codes, uint32_
 
 	for (i = 0; i < num_samples; i++) {
 		sss[i] = get_sss(diff[i]);
-		TRACE("%d\n", sss[i]);
 	}
 	root = huffman_compress(sss, _frequency, num_samples, MAX_BITS+1);
 	
@@ -223,4 +222,8 @@ uint8_t binary_to_byte(char *code) {
 	}
 
 	return byte;
+}
+
+void differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_samples, char** codes) {
+
 }
