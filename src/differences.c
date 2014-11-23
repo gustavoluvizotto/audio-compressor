@@ -224,6 +224,3 @@ uint8_t binary_to_byte(char *code) {
 	return byte;
 }
 
-void differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_samples, char** codes) {
-
-}

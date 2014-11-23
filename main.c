@@ -118,6 +118,40 @@ uint8_t search_for_equal_element(int list[], int size, int key) {
 	  return found;
 }
 
+result_t update_data(char *read_file, uint32_t *length) {
+	FILE *fp;
+	size_t size, begin;
+	size_t i;
+	size_t reading;
+	result_t result = ERR_NO;
+
+	fp = fopen(read_file, "rb");
+
+	fseek(fp, 0L, SEEK_END);
+	size = ftell(fp);
+	fseek(fp, 9, SEEK_SET);			/* skip common header */
+	begin = size - 9;				/* begin of data */
+
+	free(data_sample);
+	data_sample = (uint8_t*) malloc((begin) * sizeof(uint8_t));
+
+	for (i = 0; i < begin; i++) {
+		reading = fread(&data_sample[i], sizeof(uint8_t), 1, fp);
+		if (reading != 1) {
+			TRACE("[ERROR] Fail to read file -- sample sector\n");
+			fclose(fp);
+			result = -ERR_FAIL;
+			return result;
+		}
+	}
+
+	length = begin;
+
+	fclose(fp);
+
+	return result;
+}
+
 result_t compress(char out_file[]) {
 	size_t i, j, k;					/* index */
 	int ans = 1;					/* answer of the user about compress modes */
@@ -211,7 +245,6 @@ result_t compress(char out_file[]) {
 	}
 
 	data_adjusted = (uint8_t**) malloc(num_channels * sizeof(uint8_t*));
-
 	for (i = 0; i < num_channels; i++) {
 		data_adjusted[i] = (uint8_t*) malloc (data_channel_size * sizeof(uint8_t));
 	}
@@ -220,6 +253,9 @@ result_t compress(char out_file[]) {
 			data_adjusted[i][j] = data_sample[i*data_channel_size + j];
 		}
 	}
+	TRACE("Writing in the output file...\n");
+	result = write_header_to_file(out_file, riff_chunk, fmt_chunk, c);
+	TRACE("Common header has been written!\n");
 
 	for (i = 0; i < 3; i++){
 		switch (modes[i]) {
@@ -233,11 +269,24 @@ result_t compress(char out_file[]) {
 					frequency[j][k] = 0;
 				}
 			}
-			for (j = 0; j < num_channels; j++) {
+			if (i > 0) {
 				TRACE("Comprresing by Huffman...\n");
-				huffman_tree[j]->root = huffman_compress(data_adjusted[j], frequency[j], data_channel_size, MAX_SAMPLE);
+				huffman_tree[0]->root = huffman_compress(data_sample, frequency[0], data_channel_size, MAX_SAMPLE);
 				TRACE("Huffman compress for channel %zd successfull!\n", j+1);
+				TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
+				result = write_huffman(huffman_tree[0]->root, data_sample, frequency[0], out_file, data_channel_size);
+				TRACE("Compressed bytes have been written!\n");
+			} else {
+				for (j = 0; j < num_channels; j++) {
+					TRACE("Comprresing by Huffman...\n");
+					huffman_tree[j]->root = huffman_compress(data_adjusted[j], frequency[j], data_channel_size, MAX_SAMPLE);
+					TRACE("Huffman compress for channel %zd successfull!\n", j+1);
+					TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
+					result = write_huffman(huffman_tree[j]->root, data_adjusted[j], frequency[j], out_file, data_channel_size);
+					TRACE("Compressed bytes have been written!\n");
+				}
 			}
+			result = update_data(out_file, &data_channel_size);
 			break;
 		case 2:
 			frequency = (uint16_t**) malloc(num_channels * sizeof(uint16_t*));
@@ -249,11 +298,24 @@ result_t compress(char out_file[]) {
 					frequency[j][k] = 0;
 				}
 			}
-			for (j = 0; j < num_channels; j++) {
+			if (i > 0) {
 				TRACE("Compressing by Differences...\n");
-				huffman_tree[j]->root = diff_compress(data_adjusted[j], frequency[j], codes[j], data_channel_size);
+				huffman_tree[0]->root = diff_compress(data_sample, frequency[0], codes[0], data_channel_size);
 				TRACE("Difference compress for channel %zd successfull!\n", j);
+				TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
+				write_differences(frequency[0], codes[0], out_file, data_channel_size);
+				TRACE("Compressed bytes have been written!\n");
+			} else {
+				for (j = 0; j < num_channels; j++) {
+					TRACE("Compressing by Differences...\n");
+					huffman_tree[j]->root = diff_compress(data_adjusted[j], frequency[j], codes[j], data_channel_size);
+					TRACE("Difference compress for channel %zd successfull!\n", j);
+					TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
+					write_differences(frequency[j], codes[j], out_file, data_channel_size);
+					TRACE("Compressed bytes have been written!\n");
+				}
 			}
+			result = update_data(out_file, &data_channel_size);
 			break;
 		case 3:
 
@@ -262,16 +324,6 @@ result_t compress(char out_file[]) {
 			break;
 		}
 	}
-	TRACE("Writing in the output file...\n");
-	result = write_header_to_file(out_file, riff_chunk, fmt_chunk, c);
-	TRACE("Common header has been written!\n");
-	TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
-	for (j = 0; j < num_channels; j++) {
-		/*result = write_huffman(huffman_tree[j]->root, data_adjusted[j], frequency[j], out_file, data_channel_size);*/
-		write_differences(frequency[j], codes[j], out_file, data_channel_size);
-	}
-	TRACE("Compressed bytes have been written!\n");
-	TRACE("Output file has been written!\n");
 
 	/* free memory */
 	for (j = 0; j < num_channels; j++) {
@@ -459,7 +511,7 @@ int main () {
 
 	printf("Choose compress(c) or decompress(d): ");
 	/*scanf("%c", &mode);*/
-	mode = 'd';
+	mode = 'c';
 
 	if (mode == 'c') {
 		printf("Enter with the path and name of the sound file (including the .wav extension): ");
@@ -474,7 +526,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/example.wav.bin");
+	strcpy(in_file, "resources/upmono.wav");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {
