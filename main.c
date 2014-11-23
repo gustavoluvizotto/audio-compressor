@@ -235,7 +235,7 @@ result_t compress(char out_file[]) {
 			}
 			for (j = 0; j < num_channels; j++) {
 				TRACE("Comprresing by Huffman...\n");
-				huffman_tree[j]->root = huffman_compress(data_adjusted[j], frequency[j], data_channel_size);
+				huffman_tree[j]->root = huffman_compress(data_adjusted[j], frequency[j], data_channel_size, MAX_SAMPLE);
 				TRACE("Huffman compress for channel %zd successfull!\n", j+1);
 			}
 			break;
@@ -268,7 +268,7 @@ result_t compress(char out_file[]) {
 	TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
 	for (j = 0; j < num_channels; j++) {
 		/*result = write_huffman(huffman_tree[j]->root, data_adjusted[j], frequency[j], out_file, data_channel_size);*/
-		write_differences(huffman_tree[j]->root, frequency[j], codes[j], out_file, data_channel_size);
+		write_differences(frequency[j], codes[j], out_file, data_channel_size);
 	}
 	TRACE("Compressed bytes have been written!\n");
 	TRACE("Output file has been written!\n");
@@ -474,7 +474,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/upmono.wav");
+	strcpy(in_file, "resources/example.wav");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {

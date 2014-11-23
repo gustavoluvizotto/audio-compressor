@@ -14,7 +14,7 @@ void to_differences(uint8_t* data, int16_t* diff, uint32_t size) {
 	diff[0] = data[0];
 	
 	for (i = 1; i < size; i++) {
-		diff[i] = data[i-1] - data[i];
+		diff[i] =  data[i] - data[i-1];
 	}
 }
 
@@ -68,19 +68,24 @@ void get_value_code(char* code, int16_t value) {
 
 node_t* diff_compress(uint8_t *data, uint16_t *_frequency, char **codes, uint32_t num_samples) {
 	size_t i;
-	node_t* root;
-	uint8_t sss[num_samples];
+	node_t* root = NULL;
+	uint8_t *sss;
 	int16_t *diff = NULL;
 	char *huffman_code, *diff_code;
 
 	diff = (int16_t*) malloc(num_samples * sizeof(int16_t));
 	to_differences(data, diff, num_samples);
 
+	sss = (uint8_t*) malloc(num_samples * sizeof(uint8_t));
 	for (i = 0; i < num_samples; i++) {
-		sss[i] = get_sss(diff[i]);
+		sss[i] = 0;
 	}
 
-	root = huffman_compress(sss, _frequency, num_samples);
+	for (i = 0; i < num_samples; i++) {
+		sss[i] = get_sss(diff[i]);
+		TRACE("%d\n", sss[i]);
+	}
+	root = huffman_compress(sss, _frequency, num_samples, MAX_BITS+1);
 	
 	for (i = 0; i < num_samples; i++) {
 		huffman_code = get_code(root, sss[i])	;
@@ -89,8 +94,8 @@ node_t* diff_compress(uint8_t *data, uint16_t *_frequency, char **codes, uint32_
 		memset(codes[i], '\0', (strlen(huffman_code) + sss[i] + 1) * sizeof(char));
 		
 		/* If the code exceeds the expected number of bits, then use the SSS code with greater frequency */
-		if (strlen(huffman_code) + sss[i] > sizeof(diff_code_t) * 8 &&  i > 0) {
-			strcpy(codes[i], get_code(root, max_frequency(_frequency, MAX_SAMPLE)));
+		if (strlen(huffman_code) + sss[i] > sizeof(diff_code_t) * 8) {
+			strcpy(codes[i], get_code(root, 0/*max_frequency(_frequency, MAX_SAMPLE)*/));
 		} else {
 		   	strncpy(codes[i], huffman_code, strlen(huffman_code) * sizeof(char));
 		   	
@@ -104,7 +109,7 @@ node_t* diff_compress(uint8_t *data, uint16_t *_frequency, char **codes, uint32_
 			
 		free(huffman_code);
 	}
-	
+
 	return root;
 }
 
@@ -120,7 +125,7 @@ uint8_t max_frequency(uint16_t* array, uint8_t lenght) {
 	return max;
 }
 
-void write_differences(node_t *root, uint16_t *_frequency, char **codes, char *out_file,  uint32_t num_samples) {
+void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint32_t num_samples) {
 	unsigned char c;					/* Used to store each byte to be written on file */
 	size_t i, j;						/* Indexes */
 	uint8_t k;							/* Index to write in the file */
@@ -130,7 +135,6 @@ void write_differences(node_t *root, uint16_t *_frequency, char **codes, char *o
 	FILE *fp;
 	uint32_t count_stored_codes = 0;
 	char* huffman_code = NULL;
-	uint8_t byte;						/* codes in uint8 */
 
 	/* getting the size of the file before writting the huffman header and data. It is
 	 * useful to store the number of stuffing bits in the header that has gotten in the
@@ -161,11 +165,9 @@ void write_differences(node_t *root, uint16_t *_frequency, char **codes, char *o
 	fwrite(&count, sizeof(uint32_t), 1, fp);				/* counter of pair (huffman_code, SSS) */
 
 	/* pair (huffman_code, SSS) */
-	for (k = 0; k < MAX_BITS; k++) {
+	for (k = 0; k <= MAX_BITS; k++) {
 		if (_frequency[k] > 0) {
-			huffman_code = get_code(root, _frequency[k]);
-			byte = binary_to_byte(huffman_code);
-			fwrite(&byte, sizeof(uint8_t), 1, fp);
+			fwrite(&k, sizeof(uint8_t), 1, fp);
 			fwrite(&_frequency[k], sizeof(uint16_t), 1, fp);
 		}
 	}
@@ -175,11 +177,9 @@ void write_differences(node_t *root, uint16_t *_frequency, char **codes, char *o
 	for(i = 0; i < num_samples; i++) {
 		/* Write the huffman code in char c. Shift every character of code in bits of c */
 		for(j = 0; j < strlen(codes[i]); j++) {
-			if(codes[i][j] == '1') {
-				c <<= 1;
+			c <<= 1;
+			if(codes[i][j] == '1')
 				c += 1;
-			} else
-				c <<= 1;
 			bits++;
 			if(bits == 8) {		/* if complete an entire byte, write in the output file */
 				fwrite(&c, sizeof(unsigned char), 1, fp);

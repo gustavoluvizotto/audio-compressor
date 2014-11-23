@@ -26,8 +26,8 @@ typedef struct {
 } table_t;
 
 void huffman_table(table_t* table, uint16_t count);
-node_t* huffman(uint16_t *__frequency);
-node_t* huffman_compress(uint8_t *data, uint16_t *_frequency, uint32_t num_samples);
+node_t* huffman(uint16_t *__frequency, uint8_t bound);
+node_t* huffman_compress(uint8_t *data, uint16_t *_frequency, uint32_t num_samples, uint8_t bound);
 result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *out_file,  uint32_t num_samples);
 char* get_code(node_t* root, uint8_t data);
 void huffman_code(node_t* root, char* data, char* code);

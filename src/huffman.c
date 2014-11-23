@@ -71,7 +71,7 @@ result_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint
 
 	huffman_table(table, count);
 
-	huffman_tree->root = huffman(_frequency);
+	huffman_tree->root = huffman(_frequency, MAX_SAMPLE);
 
 	generate_table(huffman_tree->root, table, _frequency);
 
@@ -147,7 +147,7 @@ void generate_table(node_t *root, table_t *table, uint16_t *frequency){
 	}
 }
 
-node_t* huffman(uint16_t *__frequency) {
+node_t* huffman(uint16_t *__frequency, uint8_t bound) {
     int i;														/* index */
     char *aux = (char*) malloc (sizeof(char) * (MAXSIZE + 1));	/* intermediare sample */
     node_t *x, *y;												/* min frequencies from queue */
@@ -160,7 +160,7 @@ node_t* huffman(uint16_t *__frequency) {
      * step it will be usefull to create intermediate nodes in the tree (sum of frequencies
      * in the huffman tree).
      */
-    for (i = 0; i <= MAX_SAMPLE; i++) {
+    for (i = 0; i <= bound; i++) {
         if (__frequency[i] > 0) {
             memset(aux, '\0', sizeof(char) * (MAXSIZE + 1));
         	sprintf(aux, "/%d/", i);
@@ -210,7 +210,7 @@ node_t* huffman(uint16_t *__frequency) {
  * @brief Compress using huffman code.
  * @return the Huffman tree.
  */
-node_t* huffman_compress(uint8_t *data, uint16_t *_frequency, uint32_t num_samples) {
+node_t* huffman_compress(uint8_t *data, uint16_t *_frequency, uint32_t num_samples, uint8_t bound) {
 	size_t i;								/* loop indexes */
 
 	/* begin the frequency count */
@@ -218,7 +218,7 @@ node_t* huffman_compress(uint8_t *data, uint16_t *_frequency, uint32_t num_sampl
 		_frequency[data[i]]++;
 	}
 
-	return huffman(_frequency);
+	return huffman(_frequency, bound);
 }
 
 result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *out_file,  uint32_t num_samples) {
@@ -288,10 +288,8 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 		TRACE("Code: %8s, Datum: %02X\n", code, data[i]);
 		/* Write the huffman code in char c. Shift every character of code in bits of c */
 		for(j = 0; j < strlen(code); j++) {
-			if(code[j] == '1') {
-				c <<= 1;
-				c += 1;
-			} else
+			c <<= 1;
+			if(code[j] == '1')
 				c <<= 1;
 			bits++;
 			if(bits == 8) {		/* if complete an entire byte, write in the output file */
