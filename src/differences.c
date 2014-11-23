@@ -6,7 +6,7 @@
  */
 
 #include "../inc/differences.h"
-
+#include <stdlib.h>
 
 void to_differences(uint8_t* data, int16_t* diff, uint32_t size) {
 	uint32_t i;
@@ -35,8 +35,9 @@ uint8_t get_sss(int16_t value) {
 		value *= -1;
 	}
 
+	/* counting how many left zeros we have in int16_t */
 	for (i = sizeof(value) * 8 - 1; i >= 0; i--) {
-		if ((value >> i) & 0x01) {
+		if ((value >> i) & 0x01) {		/* stop when found the first 1 */
 		   break;
 		}
 	}
@@ -48,7 +49,7 @@ void get_value_code(char* code, int16_t value) {
 	size_t i;
 	uint8_t sss, negative;
 
-	if (value = 0) {
+	if (value == 0) {
 		code[0] = '\0';
 	}
 
@@ -68,18 +69,18 @@ void get_value_code(char* code, int16_t value) {
 char** diff_compress(uint8_t *data, uint16_t *frequency, uint32_t num_samples) {
 	size_t i;
 	tree_t huffman_tree;
-	uint8_t *sss;
-	int16_t *diff;
+	uint8_t sss[num_samples];
+	int16_t *diff = NULL;
 	char *huffman_code, *diff_code;
-	char **codes;
+	char **codes = NULL;
 
+	diff = (int16_t*) malloc(num_samples * sizeof(int16_t));
 	to_differences(data, diff, num_samples);
 
-	sss = (uint8_t*) malloc(num_samples * sizeof(uint8_t));
 	codes = (char**) malloc(num_samples * sizeof(char*));
 
 	for (i = 0; i < num_samples; i++) {
-		sss[i]=get_sss(diff[i]);
+		sss[i] = get_sss(diff[i]);
 	}
 
 	huffman_tree.root = huffman_compress(sss, frequency, num_samples);
@@ -90,16 +91,18 @@ char** diff_compress(uint8_t *data, uint16_t *frequency, uint32_t num_samples) {
 		codes[i] = (char*) malloc((strlen(huffman_code) + sss[i] + 1) * sizeof(char));
 		memset(codes[i], '\0', (strlen(huffman_code) + sss[i] + 1) * sizeof(char));
 		
-		if (strlen(huffman_code) + sss[i] > sizeof(diff_code_t) * 8 &&  i > 0) { /* Se o código exceder o número de bits esperado, usar o código do SSS com maior frequência. */
+		/* If the code exceeds the expected number of bits, then use the SSS code with greater frequency */
+		if (strlen(huffman_code) + sss[i] > sizeof(diff_code_t) * 8 &&  i > 0) {
 			strcpy(codes[i], get_code(huffman_tree.root, max_frequency(frequency, MAX_SAMPLE)));
 		} else {
-		   	strcpy(codes[i], huffman_code);
+		   	strncpy(codes[i], huffman_code, strlen(huffman_code) * sizeof(char));
 		   	
 		   	diff_code = (char*) malloc((sss[i] + 1) * sizeof(char));
+		   	memset(diff_code, '\0', (sss[i] + 1) * sizeof(char));
 
 			get_value_code(diff_code, diff[i]);
 			
-			strcat(codes[i], diff_code);
+			strncat(codes[i], diff_code, strlen(diff_code) * sizeof(char));
 		}
 			
 		free(huffman_code);

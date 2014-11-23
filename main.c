@@ -119,7 +119,7 @@ uint8_t search_for_equal_element(int list[], int size, int key) {
 }
 
 result_t compress(char out_file[]) {
-	size_t i, j;					/* index */
+	size_t i, j, k;					/* index */
 	int ans = 1;					/* answer of the user about compress modes */
 	int modes[3];					/* modes of compress */
 	uint8_t **data_adjusted;		/* the input data per channel adjusted for every compression */
@@ -128,6 +128,8 @@ result_t compress(char out_file[]) {
 	result_t result;				/* return result */
 	uint16_t num_channels;
 	unsigned char c = 0;
+	char ***codes;
+
 
 	num_channels = fmt_chunk.num_channels;
 	TRACE("Number of channels in the audio: %hu\n", num_channels);
@@ -135,9 +137,12 @@ result_t compress(char out_file[]) {
 	data_channel_size = number_of_samples/num_channels;
 	TRACE("Number of samples per channel: %u\n", data_channel_size);
 
+	codes = (char***) malloc(num_channels * sizeof(char**));
+
 	huffman_tree = (tree_t**) malloc(num_channels * sizeof(tree_t*));
 	for (i = 0; i < num_channels; i++) {
 		tree_create(&huffman_tree[i]);
+		codes[i] = (char**) malloc(data_channel_size * sizeof(char*));
 	}
 
 	printf("Choose the compression you want\n");
@@ -226,9 +231,12 @@ result_t compress(char out_file[]) {
 			}
 			break;
 		case 2:
-
+			for (j = 0; j < num_channels; j++) {
+				TRACE("Compressing by Differences...\n");
+				codes[j] = diff_compress(data_adjusted[j], frequency, data_channel_size);
+				TRACE("Difference compress for channel %zd successfull!\n", j);
+			}
 			break;
-
 		case 3:
 
 			break;
@@ -240,9 +248,9 @@ result_t compress(char out_file[]) {
 	result = write_header_to_file(out_file, riff_chunk, fmt_chunk, c);
 	TRACE("Common header has been written!\n");
 	TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
-	for (j = 0; j < num_channels; j++) {
+	/*for (j = 0; j < num_channels; j++) {
 		result = write_huffman(huffman_tree[j]->root, data_adjusted[j], out_file, data_channel_size);
-	}
+	}*/
 	TRACE("Compressed bytes have been written!\n");
 	TRACE("Output file has been written!\n");
 
@@ -415,7 +423,7 @@ int main () {
 
 	printf("Choose compress(c) or decompress(d): ");
 	/*scanf("%c", &mode);*/
-	mode = 'd';
+	mode = 'c';
 
 	if (mode == 'c') {
 		printf("Enter with the path and name of the sound file (including the .wav extension): ");
@@ -430,7 +438,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/upmono.wav.bin");
+	strcpy(in_file, "resources/upmono.wav");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {
