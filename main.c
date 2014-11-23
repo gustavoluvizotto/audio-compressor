@@ -267,8 +267,8 @@ result_t compress(char out_file[]) {
 	TRACE("Common header has been written!\n");
 	TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
 	for (j = 0; j < num_channels; j++) {
-		/*result = write_huffman(huffman_tree[j]->root, data_adjusted[j], frequency[j], out_file, data_channel_size);*/
-		write_differences(frequency[j], codes[j], out_file, data_channel_size);
+		result = write_huffman(huffman_tree[j]->root, data_adjusted[j], frequency[j], out_file, data_channel_size);
+		/*write_differences(frequency[j], codes[j], out_file, data_channel_size);*/
 	}
 	TRACE("Compressed bytes have been written!\n");
 	TRACE("Output file has been written!\n");
@@ -355,7 +355,7 @@ result_t decompress(char* in_file) {
 	}
 
 	data_channel_size = data_chunk.sub_chunk2_size / fmt_chunk.num_channels;
-	data_channel_size = 16;				 /*FOR example.wav ONLY!!!!! */
+	/*data_channel_size = 16;				 /*FOR example.wav ONLY!!!!! */
 	data_sample = (uint8_t*) malloc(data_channel_size * sizeof(uint8_t));
 
 	codes = (char***) malloc(fmt_chunk.num_channels * sizeof(char**));
@@ -484,7 +484,7 @@ result_t decompress(char* in_file) {
 	return result;
 }
 
-int main () {
+int main (int argc, char** argv) {
 	char in_file[40] = "";					/* input file to read */
 	result_t result = -ERR_NO;				/* return functions */
 	char mode;								/* compress/decompress mode */
@@ -492,7 +492,7 @@ int main () {
 
 	printf("Choose compress(c) or decompress(d): ");
 	/*scanf("%c", &mode);*/
-	mode = 'c';
+	mode = 'd';
 
 	if (mode == 'c') {
 		printf("Enter with the path and name of the sound file (including the .wav extension): ");
@@ -507,7 +507,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/example.wav");
+	strcpy(in_file, "resources/upmono.wav.bin");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {

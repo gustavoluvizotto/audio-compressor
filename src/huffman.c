@@ -83,6 +83,7 @@ result_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint
 		for (i = 0; i < 8 && j < num_samples; i++) {
 			strncat(target, (read_byte >> (7-i)) & 0x01 ? "1" : "0", sizeof(char));
 			if (get_leaf(huffman_tree->root, target) != NULL) {	/* found the huffman code? */
+/*			if (search_tree_by_code(huffman_tree->root, target)) {	/* found the huffman code? */
 				codes[j] = (char*) malloc((strlen(target) + 1) * sizeof(char));
 				memset(codes[j], '\0', (strlen(target) + 1) * sizeof(char));
 				strncpy(codes[j], target, strlen(target) * sizeof(char));
@@ -285,7 +286,7 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 	c = 0;
 	for(i = 0; i < num_samples; i++) {
 		code = get_code(root, data[i]); /* Obtain the huffman code for data[i] */
-		TRACE("Code: %8s, Datum: %02X\n", code, data[i]);
+	/*	TRACE("Code: %8s, Datum: %02X\n", code, data[i]);*/
 		/* Write the huffman code in char c. Shift every character of code in bits of c */
 		for(j = 0; j < strlen(code); j++) {
 			c <<= 1;
