@@ -35,3 +35,17 @@ void in_order(node_t *node) {
     in_order(node->right);
 	return;
 }
+
+char* get_leaf(node_t *node, char *code) {
+	if (node->left == NULL || node->right == NULL) {
+		return node->sample;
+	}
+	if (code[0] == '\0') {
+		return NULL;
+	}
+	if (code[0] == '1') {
+		return get_leaf(node->right, code+1);
+	} else {
+		return get_leaf(node->left, code+1);
+	}
+}

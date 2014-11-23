@@ -45,6 +45,7 @@ void print_struct(void const *vp, size_t n);
 
 void reverse(char s[]);
 char *byte_to_binary(uint8_t x);
+int string_to_int(char *a);
 
 /*
  * Combinations of codification modes and the binary representative

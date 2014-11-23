@@ -35,6 +35,5 @@ int count_ocurrencies(char* str, char c);
 result_t huffman_decompress(FILE *fp, table_t* table, uint16_t *_frequency, uint32_t num_samples, char** codes);
 void generate_table(node_t *root, table_t *table, uint16_t *frequency);
 int search_code(table_t table, char *code);
-int search_tree_by_code(node_t *node, char* code);
 
 #endif /* INC_HUFFMAN_H_ */
