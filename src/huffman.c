@@ -195,7 +195,7 @@ node_t* huffman(uint16_t *__frequency, uint8_t bound) {
         insert_node_queue(&queue, z);
     }
 
-    free(aux);
+    /*free(aux);*/
 
     /*
      * last element of a queue is the last element inserted. I.e., the root element of
@@ -285,12 +285,12 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 	c = 0;
 	for(i = 0; i < num_samples; i++) {
 		code = get_code(root, data[i]); /* Obtain the huffman code for data[i] */
-		TRACE("Code: %8s, Datum: %02X\n", code, data[i]);
+		/*TRACE("Code: %8s, Datum: %02X\n", code, data[i]);*/
 		/* Write the huffman code in char c. Shift every character of code in bits of c */
 		for(j = 0; j < strlen(code); j++) {
 			c <<= 1;
 			if(code[j] == '1')
-				c <<= 1;
+				c += 1;
 			bits++;
 			if(bits == 8) {		/* if complete an entire byte, write in the output file */
 				fwrite(&c, sizeof(unsigned char), 1, fp);
