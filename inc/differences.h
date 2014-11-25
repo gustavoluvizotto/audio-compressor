@@ -22,5 +22,6 @@ uint8_t max_frequency(uint16_t* array, uint8_t lenght);
 void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint32_t num_samples);
 int16_t binary_to_byte(char *code);
 result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_samples, char** codes);
+void perform_one_complement(char *code);
 
 #endif /* INC_DIFFERENCES_H_ */

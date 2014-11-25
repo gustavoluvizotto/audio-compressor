@@ -228,17 +228,19 @@ int16_t binary_to_byte(char *code) {
 result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_samples, char** codes) {
 	uint32_t count;
 	size_t reading;
-	size_t i, k, j = 0;
+	int i;
+	size_t k, j = 0;
 	uint8_t data;
 	result_t result = -ERR_NO;
 	char target[MAX_HUFF_CODE];			/* target code to search in the table */
-	unsigned char read_byte;			/* bytes read from file */
+	uint8_t read_byte;					/* bytes read from file */
 	tree_t *huffman_tree = NULL;		/* one huffman tree */
 	uint8_t bits = 0;					/* number of bits of the last byte */
 	uint32_t count_stored_codes;
 	char *sample = NULL;
 	uint8_t sss = 0;
 	uint8_t xgh = FALSE;				/* xgh stands for eXtreme Go Horse */
+	char *buffer;
 
 	huffman_tree = (tree_t*) malloc(sizeof(tree_t));
 	tree_create(&huffman_tree);
@@ -264,7 +266,7 @@ result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_sam
 		return result;
 	}
 
-	for (i = 0; i < count; i++) {
+	for (k = 0; k < count; k++) {
 		data = 0;
 		fread(&data, sizeof(uint8_t), 1, fp);
 		fread(&_frequency[data], sizeof(uint16_t), 1, fp);
@@ -276,15 +278,17 @@ result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_sam
 	memset(target, '\0', MAX_HUFF_CODE * sizeof(char));
 	while(j < num_samples) {
 		/* read file until find a huffman code */
-		fread(&read_byte, sizeof(unsigned char), 1, fp);
+		fread(&read_byte, sizeof(uint8_t), 1, fp);
+		buffer = byte_to_binary(read_byte);
 		for (i = 0; i < 8 && j < num_samples; i++) {
 			if (!xgh) {
-				strncat(target, (read_byte >> (7-i)) & 0x01 ? "1" : "0", sizeof(char));
+				strncat(target, &buffer[i], sizeof(char));
 				sample = get_leaf(huffman_tree->root, target);
 				if (sample != NULL) {	/* found the huffman code? */
 					codes[j] = (char*) malloc((strlen(sample) - 1) * sizeof(char));
 					memset(codes[j], '\0', (strlen(sample) - 1) * sizeof(char));
 					strncpy(codes[j], (sample+1), (strlen(sample) - 2) * sizeof(char));
+					/*TRACE("huff: %s\n", target);*/
 					memset(target, '\0', MAX_HUFF_CODE * sizeof(char));
 				}
 			}
@@ -292,17 +296,28 @@ result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_sam
 				if (!xgh) {
 					sss = (uint8_t) string_to_int(codes[j]);
 					memset(codes[j], '\0', (strlen(sample) - 1) * sizeof(char));
+					/*TRACE("sss: %d\n", sss);*/
 				}
-				for (k = xgh ? k : 0; k < sss; k++, i++) {
-					strncat(codes[j], (read_byte >> (7-k)) & 0x01 ? "1" : "0", sizeof(char));
+				for (k = xgh ? k : 0; k < sss; k++) {
+					if (xgh) {
+						i = -1;
+						xgh = FALSE;
+					}
+					i++;
+					if (i > 7) {
+						xgh = TRUE;
+						break;
+					}
+					strncat(codes[j], &buffer[i], sizeof(char));
 					if (i==7) {
 						xgh = TRUE;
+						k++;
 						break;
 					}
 				}
 				if (k == sss) {
 					xgh = FALSE;
-					i--;
+					/*TRACE("code: %s\n", codes[j]);*/
 					j++;
 				}
 			}
@@ -310,4 +325,17 @@ result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_sam
 	}
 	free(huffman_tree);
 	return result;
+}
+
+void perform_one_complement(char *code) {
+	size_t i;
+
+	for (i = 0; i < strlen(code); i++) {
+		if (code[i] == '0') {
+			code[i] = '1';
+		} else {
+			code[i] = '0';
+		}
+	}
+	return;
 }

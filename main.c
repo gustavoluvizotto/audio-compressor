@@ -267,8 +267,8 @@ result_t compress(char out_file[]) {
 	TRACE("Common header has been written!\n");
 	TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
 	for (j = 0; j < num_channels; j++) {
-		result = write_huffman(huffman_tree[j]->root, data_adjusted[j], frequency[j], out_file, data_channel_size);
-		/*write_differences(frequency[j], codes[j], out_file, data_channel_size);*/
+		/*result = write_huffman(huffman_tree[j]->root, data_adjusted[j], frequency[j], out_file, data_channel_size);*/
+		write_differences(frequency[j], codes[j], out_file, data_channel_size);
 	}
 	TRACE("Compressed bytes have been written!\n");
 	TRACE("Output file has been written!\n");
@@ -299,6 +299,7 @@ result_t decompress(char* in_file) {
 	uint16_t **frequency = NULL;		/* frequency of given sample */
 	int16_t *differences = NULL;
 	uint8_t *aux_data_sample = NULL;
+	int16_t sign = 1;
 
 	/* creating template wav file */
 	memset(riff_chunk.chunk_id, '\0', 4 * sizeof(char));
@@ -409,8 +410,14 @@ result_t decompress(char* in_file) {
 				for (j = 0; j < fmt_chunk.num_channels; j++) {
 					result = differences_decompress(fp, frequency[j], data_channel_size, codes[j]);
 					for (k = 0; k < data_channel_size; k++) {
-						differences[k] = (int16_t) string_to_int(codes[j][k]);
-						TRACE("%d\n", differences[k]);
+						sign = 1;
+						if (codes[j][k][0] == '0') {			/* check if we need to complement the code */
+							perform_one_complement(codes[j][k]);
+							sign = -1;
+						}
+						differences[k] = binary_string_to_int16(codes[j][k]);
+						differences[k] = sign * differences[k];
+						/*TRACE("%d\n", differences[k]);*/
 					}
 					from_differences(aux_data_sample, differences, data_channel_size);
 					for (k = 0; k < data_channel_size; k++) {
@@ -507,7 +514,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/viadagem.wav.bin");
+	strcpy(in_file, "resources/up.wav.bin");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {

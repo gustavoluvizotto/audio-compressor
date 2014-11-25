@@ -107,3 +107,16 @@ int string_to_int(char *a) {
 
 	return n;
 }
+
+int16_t binary_string_to_int16(char *string) {
+	size_t i;
+	int16_t diff = 0;
+
+	for (i = 0; i < strlen(string); i++) {
+		diff <<= 1;
+		if(string[i] == '1')
+			diff += 1;
+	}
+
+	return diff;
+}
