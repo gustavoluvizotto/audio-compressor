@@ -82,7 +82,7 @@ result_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint
 		fread(&read_byte, sizeof(unsigned char), 1, fp);
 		for (i = 0; i < 8 && j < num_samples; i++) {
 			strncat(target, (read_byte >> (7-i)) & 0x01 ? "1" : "0", sizeof(char));
-			if (search_tree_by_code(huffman_tree->root, target)) {	/* found the huffman code? */
+			if (get_leaf(huffman_tree->root, target) != NULL) {	/* found the huffman code? */
 				codes[j] = (char*) malloc((strlen(target) + 1) * sizeof(char));
 				memset(codes[j], '\0', (strlen(target) + 1) * sizeof(char));
 				strncpy(codes[j], target, strlen(target) * sizeof(char));
@@ -195,7 +195,7 @@ node_t* huffman(uint16_t *__frequency, uint8_t bound) {
         insert_node_queue(&queue, z);
     }
 
-    free(aux);
+    /*free(aux);*/
 
     /*
      * last element of a queue is the last element inserted. I.e., the root element of
@@ -290,7 +290,7 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 		for(j = 0; j < strlen(code); j++) {
 			c <<= 1;
 			if(code[j] == '1')
-				c <<= 1;
+				c += 1;
 			bits++;
 			if(bits == 8) {		/* if complete an entire byte, write in the output file */
 				fwrite(&c, sizeof(unsigned char), 1, fp);

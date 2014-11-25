@@ -245,6 +245,7 @@ result_t compress(char out_file[]) {
 	}
 
 	data_adjusted = (uint8_t**) malloc(num_channels * sizeof(uint8_t*));
+
 	for (i = 0; i < num_channels; i++) {
 		data_adjusted[i] = (uint8_t*) malloc (data_channel_size * sizeof(uint8_t));
 	}
@@ -348,7 +349,10 @@ result_t decompress(char* in_file) {
 	char*** codes = NULL;
 	table_t* table = NULL;
 	char* out_file;
-	uint16_t **frequency = NULL;	/* frequency of given sample */
+	uint16_t **frequency = NULL;		/* frequency of given sample */
+	int16_t *differences = NULL;
+	uint8_t *aux_data_sample = NULL;
+	int16_t sign = 1;
 
 	/* creating template wav file */
 	memset(riff_chunk.chunk_id, '\0', 4 * sizeof(char));
@@ -405,6 +409,7 @@ result_t decompress(char* in_file) {
 	}
 
 	data_channel_size = data_chunk.sub_chunk2_size / fmt_chunk.num_channels;
+	/*data_channel_size = 16;				 FOR example.wav ONLY!!!!! */
 	data_sample = (uint8_t*) malloc(data_channel_size * sizeof(uint8_t));
 
 	codes = (char***) malloc(fmt_chunk.num_channels * sizeof(char**));
@@ -441,6 +446,40 @@ result_t decompress(char* in_file) {
 				printf("Huffman decompress ok!\n");
 				break;
 			case 2:				/* Differences compression */
+				printf("Differences decompressing...\n");
+
+				frequency = (uint16_t**) malloc(fmt_chunk.num_channels * sizeof(uint16_t*));
+				for (j = 0; j < fmt_chunk.num_channels; j++) {
+					frequency[j] = (uint16_t*) malloc (MAX_SAMPLE * sizeof(uint16_t));
+					for (k = 0; k <= MAX_BITS; k++) {
+						frequency[j][k] = 0;
+					}
+				}
+				differences = (int16_t*) malloc(data_channel_size * sizeof(int16_t));
+				aux_data_sample = (uint8_t*) malloc(data_channel_size * sizeof(uint8_t));
+				for (j = 0; j < data_channel_size; j++) {
+					aux_data_sample[j] = 0;
+				}
+				for (j = 0; j < fmt_chunk.num_channels; j++) {
+					result = differences_decompress(fp, frequency[j], data_channel_size, codes[j]);
+					for (k = 0; k < data_channel_size; k++) {
+						sign = 1;
+						if (codes[j][k][0] == '0') {			/* check if we need to complement the code */
+							perform_one_complement(codes[j][k]);
+							sign = -1;
+						}
+						differences[k] = binary_string_to_int16(codes[j][k]);
+						differences[k] = sign * differences[k];
+						/*TRACE("%d\n", differences[k]);*/
+					}
+					from_differences(aux_data_sample, differences, data_channel_size);
+					for (k = 0; k < data_channel_size; k++) {
+					}
+					for (k = 0; k < data_channel_size; k++) {
+						data_sample[k + j*data_channel_size] = aux_data_sample[k];
+					}
+				}
+				printf("Differences decompress ok!\n");
 				break;
 			case 3:				/* MDCT compression */
 				break;
@@ -498,6 +537,8 @@ result_t decompress(char* in_file) {
 	}
 	printf("Data samples has been written!\n");
 
+	if (differences != NULL)
+		free(differences);
 	fclose(fp);
 
 	return result;
@@ -511,7 +552,7 @@ int main () {
 
 	printf("Choose compress(c) or decompress(d): ");
 	/*scanf("%c", &mode);*/
-	mode = 'c';
+	mode = 'd';
 
 	if (mode == 'c') {
 		printf("Enter with the path and name of the sound file (including the .wav extension): ");
@@ -526,7 +567,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/upmono.wav");
+	strcpy(in_file, "resources/example.wav.bin");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {

@@ -82,4 +82,41 @@ void print_struct(void const *vp, size_t n) {
     for (i = 0; i < n; i++)
         printf("%02X\n", p[i]);
     putchar('\n');
-};
+}
+
+int string_to_int(char *a) {
+	int c, sign, offset, n = 0;
+
+	if (a[0] == '-') {
+		sign = -1;
+	}
+
+	if (sign == -1) {
+		offset = 1;
+	} else {
+		offset = 0;
+	}
+
+	for (c = offset; a[c] != '\0'; c++) {
+		n = n * 10 + a[c] - '0';
+	}
+
+	if (sign == -1) {
+		n = -n;
+	}
+
+	return n;
+}
+
+int16_t binary_string_to_int16(char *string) {
+	size_t i;
+	int16_t diff = 0;
+
+	for (i = 0; i < strlen(string); i++) {
+		diff <<= 1;
+		if(string[i] == '1')
+			diff += 1;
+	}
+
+	return diff;
+}

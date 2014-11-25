@@ -84,10 +84,10 @@ node_t* diff_compress(uint8_t *data, uint16_t *_frequency, char **codes, uint32_
 	for (i = 0; i < num_samples; i++) {
 		sss[i] = get_sss(diff[i]);
 	}
-	root = huffman_compress(sss, _frequency, num_samples, MAX_BITS+1);
+	root = huffman_compress(sss, _frequency, num_samples, MAX_BITS);
 	
 	for (i = 0; i < num_samples; i++) {
-		huffman_code = get_code(root, sss[i])	;
+		huffman_code = get_code(root, sss[i]);
 
 		codes[i] = (char*) malloc((strlen(huffman_code) + sss[i] + 1) * sizeof(char));
 		memset(codes[i], '\0', (strlen(huffman_code) + sss[i] + 1) * sizeof(char));
@@ -97,7 +97,7 @@ node_t* diff_compress(uint8_t *data, uint16_t *_frequency, char **codes, uint32_
 			strcpy(codes[i], get_code(root, 0/*max_frequency(_frequency, MAX_SAMPLE)*/));
 		} else {
 		   	strncpy(codes[i], huffman_code, strlen(huffman_code) * sizeof(char));
-		   	
+
 		   	diff_code = (char*) malloc((sss[i] + 1) * sizeof(char));
 		   	memset(diff_code, '\0', (sss[i] + 1) * sizeof(char));
 
@@ -156,7 +156,7 @@ void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint
 	fwrite(&bits, sizeof(uint8_t), 1, fp);					/* stuff bits */
 	fwrite(&count_stored_codes, sizeof(uint32_t), 1, fp);	/* number of written bytes */
 
-	for (k = 0; k < MAX_BITS; k++) {
+	for (k = 0; k <= MAX_BITS; k++) {
 		if (_frequency[k] > 0) {
 			count++;
 		}
@@ -210,9 +210,9 @@ void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint
 	return;
 }
 
-uint8_t binary_to_byte(char *code) {
+int16_t binary_to_byte(char *code) {
 	size_t i;
-	uint8_t byte = 0;
+	int16_t byte = 0;
 
 	for (i = 0; i < strlen(code); i++) {
 		byte <<= 1;
@@ -224,3 +224,117 @@ uint8_t binary_to_byte(char *code) {
 	return byte;
 }
 
+result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_samples, char** codes) {
+	uint32_t count;
+	size_t reading;
+	int i;
+	size_t k, j = 0;
+	uint8_t data;
+	result_t result = -ERR_NO;
+	char target[MAX_HUFF_CODE];			/* target code to search in the table */
+	uint8_t read_byte;					/* bytes read from file */
+	tree_t *huffman_tree = NULL;		/* one huffman tree */
+	uint8_t bits = 0;					/* number of bits of the last byte */
+	uint32_t count_stored_codes;
+	char *sample = NULL;
+	uint8_t sss = 0;
+	uint8_t xgh = FALSE;				/* xgh stands for eXtreme Go Horse */
+	char *buffer;
+
+	huffman_tree = (tree_t*) malloc(sizeof(tree_t));
+	tree_create(&huffman_tree);
+
+	reading = fread(&bits, sizeof(uint8_t), 1,fp);
+	if (reading != 1) {
+		TRACE("[ERROR] Fail to read file -- number of bits of the last character\n");
+		result = -ERR_FAIL;
+		return result;
+	}
+
+	reading = fread(&count_stored_codes, sizeof(uint32_t), 1,fp);
+	if (reading != 1) {
+		TRACE("[ERROR] Fail to read file -- number of bytes of huffman code stored\n");
+		result = -ERR_FAIL;
+		return result;
+	}
+
+	reading = fread(&count, sizeof(uint32_t), 1, fp);
+	if (reading != 1) {
+		TRACE("[ERROR] Fail to read file -- frequency counter\n");
+		result = -ERR_FAIL;
+		return result;
+	}
+
+	for (k = 0; k < count; k++) {
+		data = 0;
+		fread(&data, sizeof(uint8_t), 1, fp);
+		fread(&_frequency[data], sizeof(uint16_t), 1, fp);
+	}
+
+	huffman_tree->root = huffman(_frequency, MAX_BITS);
+
+	/* decode every byte read from data sector in input file */
+	memset(target, '\0', MAX_HUFF_CODE * sizeof(char));
+	while(j < num_samples) {
+		/* read file until find a huffman code */
+		fread(&read_byte, sizeof(uint8_t), 1, fp);
+		buffer = byte_to_binary(read_byte);
+		for (i = 0; i < 8 && j < num_samples; i++) {
+			if (!xgh) {
+				strncat(target, &buffer[i], sizeof(char));
+				sample = get_leaf(huffman_tree->root, target);
+				if (sample != NULL) {	/* found the huffman code? */
+					codes[j] = (char*) malloc((strlen(sample) - 1) * sizeof(char));
+					memset(codes[j], '\0', (strlen(sample) - 1) * sizeof(char));
+					strncpy(codes[j], (sample+1), (strlen(sample) - 2) * sizeof(char));
+					/*TRACE("huff: %s\n", target);*/
+					memset(target, '\0', MAX_HUFF_CODE * sizeof(char));
+				}
+			}
+			if (sample != NULL) {
+				if (!xgh) {
+					sss = (uint8_t) string_to_int(codes[j]);
+					memset(codes[j], '\0', (strlen(sample) - 1) * sizeof(char));
+					/*TRACE("sss: %d\n", sss);*/
+				}
+				for (k = xgh ? k : 0; k < sss; k++) {
+					if (xgh) {
+						i = -1;
+						xgh = FALSE;
+					}
+					i++;
+					if (i > 7) {
+						xgh = TRUE;
+						break;
+					}
+					strncat(codes[j], &buffer[i], sizeof(char));
+					if (i==7) {
+						xgh = TRUE;
+						k++;
+						break;
+					}
+				}
+				if (k == sss) {
+					xgh = FALSE;
+					/*TRACE("code: %s\n", codes[j]);*/
+					j++;
+				}
+			}
+		}
+	}
+	free(huffman_tree);
+	return result;
+}
+
+void perform_one_complement(char *code) {
+	size_t i;
+
+	for (i = 0; i < strlen(code); i++) {
+		if (code[i] == '0') {
+			code[i] = '1';
+		} else {
+			code[i] = '0';
+		}
+	}
+	return;
+}
