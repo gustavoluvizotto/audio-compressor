@@ -174,7 +174,7 @@ result_t compress(char out_file[]) {
 	codes = (char**) malloc(number_of_samples * sizeof(char*));
 
 	for (i = 0; i < number_of_samples; i++) {
-		codes[i] = (char*) malloc(16 * sizeof(char));
+		codes[i] = NULL;
 	}
 
 	printf("Choose the compression you want\n");
@@ -298,7 +298,6 @@ result_t decompress(char* in_file) {
 	int modes[3];
 	size_t i, j, k;
 	size_t writing;
-	uint32_t data_channel_size;
 	char** codes = NULL;
 	table_t table;
 	char* out_file;
@@ -339,6 +338,8 @@ result_t decompress(char* in_file) {
 	fread(&fmt_chunk.sample_rate, sizeof(uint32_t), 1, fp);
 	fmt_chunk.byte_rate = fmt_chunk.sample_rate * fmt_chunk.num_channels;
 
+	fclose(fp);
+
 	switch((mode >> 2) & 0x03) {
 		case 0:
 			modes[0] = mode & 0x03;
@@ -362,27 +363,27 @@ result_t decompress(char* in_file) {
 			break;
 	}
 
-	data_channel_size = data_chunk.sub_chunk2_size / fmt_chunk.num_channels;
-	/*data_channel_size = 16;				 FOR example.wav ONLY!!!!! */
-	num_samples = data_chunk.sub_chunk2_size;
-	data_sample = (uint8_t*) malloc(num_samples * sizeof(uint8_t));
-
-	codes = (char**) malloc(num_samples * sizeof(char*));
-	table.rows = NULL;
-	for (i = 0; i < num_samples; i++) {
-		codes[i] = (char*) malloc(16 * sizeof(char));
-	}
-
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 2; i++) {
 		switch(modes[i]) {
 			case 1:				/* Huffman compression */
 				printf("Huffman decompressing...\n");
+				fp = fopen(in_file, "rb");
+				fseek(fp, 9, SEEK_SET);
+				fread(&num_samples, sizeof(uint32_t), 1, fp);
+
+				data_sample = (uint8_t*) malloc(num_samples * sizeof(uint8_t));
 
 				frequency = (uint16_t*) malloc ((MAX_SAMPLE + 1) * sizeof(uint16_t));
 				for (k = 0; k <= MAX_SAMPLE; k++) {
 					frequency[k] = 0;
 				}
-				result = huffman_decompress(fp, &table, frequency, data_channel_size, codes);
+				codes = (char**) malloc(num_samples * sizeof(char*));
+				table.rows = NULL;
+				for (i = 0; i < num_samples; i++) {
+					codes[i] = (char*) malloc(40 * sizeof(char));
+				}
+
+				result = huffman_decompress(fp, &table, frequency, num_samples, codes);
 				for (k = 0; k < num_samples; k++) {
 					data_sample[k] = (uint8_t) search_code(table, codes[k]);
 				}
@@ -390,17 +391,27 @@ result_t decompress(char* in_file) {
 				break;
 			case 2:				/* Differences compression */
 				printf("Differences decompressing...\n");
+				fp = fopen(in_file, "rb");
+				fseek(fp, 9, SEEK_SET);
+				fread(&num_samples, sizeof(uint32_t), 1, fp);
+
+				data_sample = (uint8_t*) malloc(num_samples * sizeof(uint8_t));
 
 				frequency = (uint16_t*) malloc ((MAX_BITS + 1) * sizeof(uint16_t));
 				for (k = 0; k <= MAX_BITS; k++) {
 					frequency[k] = 0;
 				}
+				codes = (char**) malloc(num_samples * sizeof(char*));
+				for (i = 0; i < num_samples; i++) {
+					codes[i] = (char*) malloc(40 * sizeof(char));
+				}
+
 				differences = (int16_t*) malloc(num_samples * sizeof(int16_t));
 				aux_data_sample = (uint8_t*) malloc(num_samples * sizeof(uint8_t));
 				for (j = 0; j < num_samples; j++) {
 					aux_data_sample[j] = 0;
 				}
-				result = differences_decompress(fp, frequency, data_channel_size, codes);
+				result = differences_decompress(fp, frequency, num_samples, codes);
 				for (k = 0; k < num_samples; k++) {
 					sign = 1;
 					if (codes[k][0] == '0') {			/* check if we need to complement the code */
@@ -423,7 +434,7 @@ result_t decompress(char* in_file) {
 				break;
 		}
 	}
-
+	num_samples = data_chunk.sub_chunk2_size;
 	out_file = (char*) malloc((strlen(in_file) - 3) * sizeof(char));
 	memset(out_file, '\0', (strlen(in_file) - 3) * sizeof(char));
 	strncpy(out_file, in_file, (strlen(in_file) - 4) * sizeof(char));
@@ -476,6 +487,7 @@ result_t decompress(char* in_file) {
 	if (differences != NULL)
 		free(differences);
 	fclose(fp);
+	fclose(out_fp);
 
 	return result;
 }
@@ -503,7 +515,7 @@ int main () {
 	}
 	fflush(stdin);
 	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/upmono.wav.bin");
+	strcpy(in_file, "resources/up.wav.bin");
 	if (mode == 'c') {
 		result = read_sound(in_file);
 	} else {

@@ -89,7 +89,7 @@ node_t* diff_compress(uint8_t *data, uint16_t *_frequency, char **codes, uint32_
 	for (i = 0; i < num_samples; i++) {
 		huffman_code = get_code(root, sss[i]);
 
-		/*codes[i] = (char*) malloc((strlen(huffman_code) + sss[i] + 1) * sizeof(char));*/
+		codes[i] = (char*) malloc((strlen(huffman_code) + sss[i] + 1) * sizeof(char));
 		memset(codes[i], '\0', (strlen(huffman_code) + sss[i] + 1) * sizeof(char));
 		
 		/* If the code exceeds the expected number of bits, then use the SSS code with greater frequency */
@@ -132,7 +132,6 @@ void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint
 	uint32_t count = 0;					/* Count number of frequencies differents from zero */
 	size_t size;
 	FILE *fp;
-	uint32_t count_stored_codes = 0;
 	char* huffman_code = NULL;
 
 	/* getting the size of the file before writting the huffman header and data. It is
@@ -153,8 +152,8 @@ void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint
 	fseek(fp, 0, SEEK_END);
 
 	/* Writing Differences header */
+	fwrite(&num_samples, sizeof(uint32_t), 1, fp);
 	fwrite(&bits, sizeof(uint8_t), 1, fp);					/* stuff bits */
-	fwrite(&count_stored_codes, sizeof(uint32_t), 1, fp);	/* number of written bytes */
 
 	for (k = 0; k <= MAX_BITS; k++) {
 		if (_frequency[k] > 0) {
@@ -182,7 +181,6 @@ void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint
 			bits++;
 			if(bits == 8) {		/* if complete an entire byte, write in the output file */
 				fwrite(&c, sizeof(unsigned char), 1, fp);
-				count_stored_codes++;
 				c = 0;
 				bits = 0;
 			}
@@ -197,10 +195,8 @@ void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint
 			i++;
 		}
 		fwrite(&c, sizeof(unsigned char), 1, fp); 		/* write the last c byte */
-		count_stored_codes++;
-		fseek(fp, size, SEEK_SET);	 					/* jump and stop on the huffman header (number of bits field) */
+		fseek(fp, size+sizeof(num_samples), SEEK_SET);	/* jump and stop on the huffman header (number of bits field) */
 		fwrite(&bits, sizeof(uint8_t), 1, fp); 			/* write the number of bits of the last c byte without stuffing 0 */
-		fwrite(&count_stored_codes, sizeof(uint32_t), 1, fp);
 	}
 
 	/* free memory and close file */
@@ -235,7 +231,6 @@ result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_sam
 	uint8_t read_byte;					/* bytes read from file */
 	tree_t *huffman_tree = NULL;		/* one huffman tree */
 	uint8_t bits = 0;					/* number of bits of the last byte */
-	uint32_t count_stored_codes;
 	char *sample = NULL;
 	uint8_t sss = 0;
 	uint8_t xgh = FALSE;				/* xgh stands for eXtreme Go Horse */
@@ -247,13 +242,6 @@ result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_sam
 	reading = fread(&bits, sizeof(uint8_t), 1,fp);
 	if (reading != 1) {
 		TRACE("[ERROR] Fail to read file -- number of bits of the last character\n");
-		result = -ERR_FAIL;
-		return result;
-	}
-
-	reading = fread(&count_stored_codes, sizeof(uint32_t), 1,fp);
-	if (reading != 1) {
-		TRACE("[ERROR] Fail to read file -- number of bytes of huffman code stored\n");
 		result = -ERR_FAIL;
 		return result;
 	}
@@ -316,7 +304,7 @@ result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_sam
 				}
 				if (k == sss) {
 					xgh = FALSE;
-					TRACE("code: %s\n", codes[j]);
+					/*TRACE("code: %s\n", codes[j]);*/
 					j++;
 				}
 			}
