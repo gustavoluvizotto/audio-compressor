@@ -83,7 +83,7 @@ result_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint
 		for (i = 0; i < 8 && j < num_samples; i++) {
 			strncat(target, (read_byte >> (7-i)) & 0x01 ? "1" : "0", sizeof(char));
 			if (get_leaf(huffman_tree->root, target) != NULL) {	/* found the huffman code? */
-				codes[j] = (char*) malloc((strlen(target) + 1) * sizeof(char));
+				/*codes[j] = (char*) malloc((strlen(target) + 1) * sizeof(char));*/
 				memset(codes[j], '\0', (strlen(target) + 1) * sizeof(char));
 				strncpy(codes[j], target, strlen(target) * sizeof(char));
 				memset(target, '\0', MAX_HUFF_CODE * sizeof(char));

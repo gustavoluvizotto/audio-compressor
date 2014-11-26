@@ -89,7 +89,7 @@ node_t* diff_compress(uint8_t *data, uint16_t *_frequency, char **codes, uint32_
 	for (i = 0; i < num_samples; i++) {
 		huffman_code = get_code(root, sss[i]);
 
-		codes[i] = (char*) malloc((strlen(huffman_code) + sss[i] + 1) * sizeof(char));
+		/*codes[i] = (char*) malloc((strlen(huffman_code) + sss[i] + 1) * sizeof(char));*/
 		memset(codes[i], '\0', (strlen(huffman_code) + sss[i] + 1) * sizeof(char));
 		
 		/* If the code exceeds the expected number of bits, then use the SSS code with greater frequency */
@@ -284,7 +284,7 @@ result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_sam
 				strncat(target, &buffer[i], sizeof(char));
 				sample = get_leaf(huffman_tree->root, target);
 				if (sample != NULL) {	/* found the huffman code? */
-					codes[j] = (char*) malloc((strlen(sample) - 1) * sizeof(char));
+					/*codes[j] = (char*) malloc((strlen(sample) - 1) * sizeof(char));*/
 					memset(codes[j], '\0', (strlen(sample) - 1) * sizeof(char));
 					strncpy(codes[j], (sample+1), (strlen(sample) - 2) * sizeof(char));
 					/*TRACE("huff: %s\n", target);*/
@@ -316,13 +316,14 @@ result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_sam
 				}
 				if (k == sss) {
 					xgh = FALSE;
-					/*TRACE("code: %s\n", codes[j]);*/
+					TRACE("code: %s\n", codes[j]);
 					j++;
 				}
 			}
 		}
 	}
 	free(huffman_tree);
+
 	return result;
 }
 
