@@ -26,14 +26,14 @@ typedef struct {
 } table_t;
 
 void huffman_table(table_t* table, uint16_t count);
-node_t* huffman(uint16_t *__frequency, uint8_t bound);
-node_t* huffman_compress(uint8_t *data, uint16_t *_frequency, uint32_t num_samples, uint8_t bound);
-result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *out_file,  uint32_t num_samples);
+node_t* huffman(frequency_t *__frequency, uint8_t bound);
+node_t* huffman_compress(uint8_t *data, frequency_t *_frequency, uint32_t num_samples, uint8_t bound);
+result_t write_huffman(node_t *root, uint8_t *data, frequency_t *_frequency, char *out_file,  uint32_t num_samples);
 char* get_code(node_t* root, uint8_t data);
 void huffman_code(node_t* root, char* data, char* code);
 int count_ocurrencies(char* str, char c);
-uint32_t huffman_decompress(FILE *fp, table_t* table, uint16_t *_frequency, uint32_t num_samples, char** codes);
-void generate_table(node_t *root, table_t *table, uint16_t *frequency);
+uint32_t huffman_decompress(FILE *fp, table_t* table, frequency_t *_frequency, uint32_t num_samples, char** codes);
+void generate_table(node_t *root, table_t *table, frequency_t *frequency);
 int search_code(table_t table, char *code);
 
 #endif /* INC_HUFFMAN_H_ */

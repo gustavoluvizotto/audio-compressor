@@ -10,7 +10,6 @@
  *  	ByteRate = SampleRate * NumChannels
  *  	Max(NumChannels) = 16
  *
- *  TODO Check for non-freed memory.
  */
 
 #include "inc/differences.h"
@@ -144,8 +143,8 @@ uint32_t update_data(char *read_file) {
 
 	fseek(fp, 0L, SEEK_END);
 	size = ftell(fp);
-	fseek(fp, 9, SEEK_SET);			/* skip common header */
-	begin = size - 9;				/* begin of data */
+	fseek(fp, COMMON_HEADER, SEEK_SET);			/* skip common header */
+	begin = size - COMMON_HEADER;				/* begin of data */
 
 	free(data_sample);
 	data_sample = (uint8_t*) malloc((begin) * sizeof(uint8_t));
@@ -175,7 +174,7 @@ result_t compress(char out_file[]) {
 	uint16_t num_channels;			/* number of channels of the sound */
 	unsigned char c = 0;			/* byte to create the table shown in commmon.h */
 	char **codes;					/* vector of codes used in difference compress. Huffman code + value */
-	uint16_t *frequency = NULL;		/* frequency of given sample */
+	frequency_t *frequency = NULL;	/* frequency of given sample */
 
 	num_channels = fmt_chunk.num_channels;
 	TRACE("Number of channels in the audio: %hu\n", num_channels);
@@ -261,7 +260,7 @@ result_t compress(char out_file[]) {
 	for (i = 0; i < 3; i++){
 		switch (modes[i]) {
 		case 1:
-			frequency = (uint16_t*) malloc ((MAX_SAMPLE + 1) * sizeof(uint16_t));
+			frequency = (frequency_t*) malloc ((MAX_SAMPLE + 1) * sizeof(frequency_t));
 			for (k = 0; k <= MAX_SAMPLE; k++) {
 				frequency[k] = 0;
 			}
@@ -275,7 +274,7 @@ result_t compress(char out_file[]) {
 			number_of_samples = update_data(out_file);
 			break;
 		case 2:
-			frequency = (uint16_t*) malloc ((MAX_BITS + 1) * sizeof(uint16_t));
+			frequency = (frequency_t*) malloc ((MAX_BITS + 1) * sizeof(frequency_t));
 			for (k = 0; k <= MAX_BITS; k++) {
 				frequency[k] = 0;
 			}
@@ -310,7 +309,7 @@ void write_intermediate(char *bin_file, uint32_t num_samples) {
 
 	fp = fopen(bin_file, "rb+");
 
-	fseek(fp, 9, SEEK_SET);
+	fseek(fp, COMMON_HEADER, SEEK_SET);
 
 	for(i = 0; i < num_samples; i++) {
 		fwrite(&data_sample[i], sizeof(uint8_t), 1, fp);
@@ -332,7 +331,7 @@ result_t decompress(char* in_file) {
 	char** codes = NULL;					/* vector of data codes */
 	table_t table;							/* huffman table */
 	char* out_file;							/* name of the output file */
-	uint16_t *frequency = NULL;				/* frequency of given sample */
+	frequency_t *frequency = NULL;			/* frequency of given sample */
 	int16_t *differences = NULL;			/* differences vector (differences decompression) */
 	uint8_t *aux_data_sample = NULL;		/* intermediate data_sample */
 	int16_t sign = 1;						/* sign byte to perform one's complement */
@@ -402,25 +401,25 @@ result_t decompress(char* in_file) {
 				TRACE("Huffman decompressing...\n");
 				fp = fopen(in_file, "rb");
 				/* skipping common header... */
-				fseek(fp, 9, SEEK_SET);
+				fseek(fp, COMMON_HEADER, SEEK_SET);
 				/* and getting the number of samples of this compression */
 				fread(&num_samples, sizeof(uint32_t), 1, fp);
 
 				data_sample = (uint8_t*) malloc(num_samples * sizeof(uint8_t));
 
-				frequency = (uint16_t*) malloc ((MAX_SAMPLE + 1) * sizeof(uint16_t));
+				frequency = (frequency_t*) malloc ((MAX_SAMPLE + 1) * sizeof(frequency_t));
 				for (k = 0; k <= MAX_SAMPLE; k++) {
 					frequency[k] = 0;
 				}
 				codes = (char**) malloc(num_samples * sizeof(char*));
 				table.rows = NULL;
 				for (k = 0; k < num_samples; k++) {
-					codes[k] = (char*) malloc(40 * sizeof(char));
+					codes[k] = (char*) malloc(MAX_CODE * sizeof(char));
 				}
 
 				header_counter = huffman_decompress(fp, &table, frequency, num_samples, codes);
 								 	 	 	 	   /* data              frequency             bits               count            num_samples*/
-				header_counter = header_counter * (sizeof(uint8_t) + sizeof(uint16_t)) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint32_t);
+				header_counter = header_counter * (sizeof(uint8_t) + sizeof(frequency_t)) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint32_t);
 				for (k = 0; k < num_samples; k++) {
 					data_sample[k] = (uint8_t) search_code(table, codes[k]);
 				}
@@ -435,19 +434,19 @@ result_t decompress(char* in_file) {
 				TRACE("Differences decompressing...\n");
 				fp = fopen(in_file, "rb");
 				/* skipping common header... */
-				fseek(fp, 9, SEEK_SET);
+				fseek(fp, COMMON_HEADER, SEEK_SET);
 				/* and getting the number of samples of this compression */
 				fread(&num_samples, sizeof(uint32_t), 1, fp);
 
 				data_sample = (uint8_t*) malloc(num_samples * sizeof(uint8_t));
 
-				frequency = (uint16_t*) malloc ((MAX_BITS + 1) * sizeof(uint16_t));
+				frequency = (frequency_t*) malloc ((MAX_BITS + 1) * sizeof(frequency_t));
 				for (k = 0; k <= MAX_BITS; k++) {
 					frequency[k] = 0;
 				}
 				codes = (char**) malloc(num_samples * sizeof(char*));
 				for (k = 0; k < num_samples; k++) {
-					codes[k] = (char*) malloc(40 * sizeof(char));
+					codes[k] = (char*) malloc(MAX_CODE * sizeof(char));
 				}
 
 				differences = (int16_t*) malloc(num_samples * sizeof(int16_t));
@@ -458,7 +457,7 @@ result_t decompress(char* in_file) {
 
 				header_counter = differences_decompress(fp, frequency, num_samples, codes);
 	 	 	 	   	   	   	   	   	   	   	   	   /* data              frequency             bits               count          num_samples */
-				header_counter = header_counter * (sizeof(uint8_t) + sizeof(uint16_t)) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint32_t);
+				header_counter = header_counter * (sizeof(uint8_t) + sizeof(frequency_t)) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint32_t);
 				for (k = 0; k < num_samples; k++) {
 					sign = 1;
 					if (codes[k][0] == '0') {			/* check if we need to complement the code */

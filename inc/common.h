@@ -37,6 +37,12 @@
 
 #define MAX_BITS 8			/* max number of bits of a data (data of 8 bits?) */
 
+#define MAX_CODE 50
+
+#define COMMON_HEADER 9
+
+typedef uint16_t frequency_t;
+
 typedef int8_t result_t;
 
 #define PRINT_STRUCT(p) print_struct((p), sizeof(*(p)))

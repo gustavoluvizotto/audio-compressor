@@ -4,8 +4,6 @@
  *  Created on: Nov 1, 2014
  *      Author: gustavo
  *
- *  TODO Write the huffman header (frequencies) in binary mode, i.e., convert the uint16_t frequency type in binary string and discart the first zeros (save only the essential data).
- *  TODO Disalloc the memory in write huffman
  */
 
 #include "../inc/huffman.h"
@@ -27,7 +25,7 @@ void huffman_table(table_t *table, uint16_t count) {
 	return;
 }
 
-uint32_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint32_t num_samples, char** codes) {
+uint32_t huffman_decompress(FILE *fp, table_t *table, frequency_t *_frequency, uint32_t num_samples, char** codes) {
 	uint32_t count;						/* count the number of frequency-sample */
 	size_t reading;						/* fread control return */
 	size_t i, j = 0;					/* loop indexes */
@@ -56,7 +54,7 @@ uint32_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint
 	for (i = 0; i < count; i++) {
 		data = 0;
 		fread(&data, sizeof(uint8_t), 1, fp);
-		fread(&_frequency[data], sizeof(uint16_t), 1, fp);
+		fread(&_frequency[data], sizeof(frequency_t), 1, fp);
 	}
 	/* huffman header has been read */
 
@@ -120,7 +118,7 @@ int search_code(table_t table, char *code){
 /*
 * Obtain the huffman code and store in the table.
 */
-void generate_table(node_t *root, table_t *table, uint16_t *frequency){
+void generate_table(node_t *root, table_t *table, frequency_t *frequency){
 	uint8_t i, j = 0;
 	
 	for(i = 0; i < MAX_SAMPLE; i++){
@@ -138,7 +136,7 @@ void generate_table(node_t *root, table_t *table, uint16_t *frequency){
 	}
 }
 
-node_t* huffman(uint16_t *__frequency, uint8_t bound) {
+node_t* huffman(frequency_t *__frequency, uint8_t bound) {
     int i;														/* index */
     char *aux = (char*) malloc (sizeof(char) * (MAXSIZE + 1));	/* intermediare sample */
     node_t *x, *y;												/* min frequencies from queue */
@@ -201,7 +199,7 @@ node_t* huffman(uint16_t *__frequency, uint8_t bound) {
  * @brief Compress using huffman code.
  * @return the Huffman tree.
  */
-node_t* huffman_compress(uint8_t *data, uint16_t *_frequency, uint32_t num_samples, uint8_t bound) {
+node_t* huffman_compress(uint8_t *data, frequency_t *_frequency, uint32_t num_samples, uint8_t bound) {
 	size_t i;								/* loop indexes */
 
 	/* begin the frequency count */
@@ -212,7 +210,7 @@ node_t* huffman_compress(uint8_t *data, uint16_t *_frequency, uint32_t num_sampl
 	return huffman(_frequency, bound);
 }
 
-result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *out_file,  uint32_t num_samples) {
+result_t write_huffman(node_t *root, uint8_t *data, frequency_t *_frequency, char *out_file,  uint32_t num_samples) {
 	unsigned char c;					/* Used to store each byte to be written on file */
 	char* code = NULL;					/* Huffman code */
 	size_t i, j;						/* Indexes */
@@ -233,7 +231,7 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 		return result;
 	}
 	/* skipping the common header */
-	fseek(fp, 9, SEEK_SET);
+	fseek(fp, COMMON_HEADER, SEEK_SET);
 
 	/* Writing Huffman header */
 	fwrite(&num_samples, sizeof(uint32_t), 1, fp);
@@ -250,12 +248,12 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 	for (k = 0; k < MAX_SAMPLE; k++) {
 		if (_frequency[k] > 0) {
 			fwrite(&k, sizeof(uint8_t), 1, fp);
-			fwrite(&_frequency[k], sizeof(uint16_t), 1, fp);
+			fwrite(&_frequency[k], sizeof(frequency_t), 1, fp);
 		}
 	}
 	if (_frequency[k] > 0) {
 		fwrite(&k, sizeof(uint8_t), 1, fp);
-		fwrite(&_frequency[k], sizeof(uint16_t), 1, fp);
+		fwrite(&_frequency[k], sizeof(frequency_t), 1, fp);
 	}
 	/* huffman header has been written */
 
@@ -289,7 +287,7 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 			i++;
 		}
 		fwrite(&c, sizeof(unsigned char), 1, fp); 		/* write the last c byte */
-		fseek(fp, 9+sizeof(uint32_t), SEEK_SET);		/* jump (number of samples to) and stop on the huffman header (number of bits field) */
+		fseek(fp, COMMON_HEADER + sizeof(uint32_t), SEEK_SET);		/* jump (number of samples to) and stop on the huffman header (number of bits field) */
 		fwrite(&bits, sizeof(uint8_t), 1, fp); 			/* write the number of bits of the last c byte without stuffing 0 */
 	}
 	/* free memory and close file */

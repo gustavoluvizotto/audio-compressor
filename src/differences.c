@@ -66,7 +66,7 @@ void get_value_code(char* code, int16_t value) {
 }
 
 
-node_t* diff_compress(uint8_t *data, uint16_t *_frequency, char **codes, uint32_t num_samples) {
+node_t* diff_compress(uint8_t *data, frequency_t *_frequency, char **codes, uint32_t num_samples) {
 	size_t i;							/* loop index */
 	node_t* root = NULL;				/* root node for huffman tree */
 	uint8_t *sss;						/* number of bits of a given data */
@@ -124,7 +124,7 @@ uint8_t max_frequency(uint16_t* array, uint8_t lenght) {
 	return max;
 }
 
-void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint32_t num_samples) {
+void write_differences(frequency_t *_frequency, char **codes, char *out_file,  uint32_t num_samples) {
 	unsigned char c;					/* Used to store each byte to be written on file */
 	size_t i, j;						/* Indexes */
 	uint8_t k;							/* Index to write in the file */
@@ -139,7 +139,7 @@ void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint
 		fclose(fp);
 		return;
 	}
-	fseek(fp, 9, SEEK_SET);		/* skipping the common header */
+	fseek(fp, COMMON_HEADER, SEEK_SET);		/* skipping the common header */
 
 	/* Writing Differences header */
 	fwrite(&num_samples, sizeof(uint32_t), 1, fp);
@@ -156,7 +156,7 @@ void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint
 	for (k = 0; k <= MAX_BITS; k++) {
 		if (_frequency[k] > 0) {
 			fwrite(&k, sizeof(uint8_t), 1, fp);
-			fwrite(&_frequency[k], sizeof(uint16_t), 1, fp);
+			fwrite(&_frequency[k], sizeof(frequency_t), 1, fp);
 		}
 	}
 	/* difference header has been written */
@@ -185,9 +185,9 @@ void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint
 			c <<= 1;
 			i++;
 		}
-		fwrite(&c, sizeof(unsigned char), 1, fp); 		/* write the last c byte */
-		fseek(fp, 9 + sizeof(uint32_t), SEEK_SET);		/* jump (number of samples too) and stop on the huffman header (number of bits field) */
-		fwrite(&bits, sizeof(uint8_t), 1, fp); 			/* write the number of bits of the last c byte without stuffing 0 */
+		fwrite(&c, sizeof(unsigned char), 1, fp); 					/* write the last c byte */
+		fseek(fp, COMMON_HEADER + sizeof(uint32_t), SEEK_SET);		/* jump (number of samples too) and stop on the huffman header (number of bits field) */
+		fwrite(&bits, sizeof(uint8_t), 1, fp); 						/* write the number of bits of the last c byte without stuffing 0 */
 	}
 
 	/* free memory and close file */
@@ -211,7 +211,7 @@ int16_t binary_to_byte(char *code) {
 	return byte;
 }
 
-uint32_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_samples, char** codes) {
+uint32_t differences_decompress(FILE *fp, frequency_t *_frequency, uint32_t num_samples, char** codes) {
 	uint32_t count;						/* counter of data and frequency */
 	size_t reading;						/* fread return control */
 	int i;								/* loop control */
@@ -245,7 +245,7 @@ uint32_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_sam
 	for (k = 0; k < count; k++) {
 		data = 0;
 		fread(&data, sizeof(uint8_t), 1, fp);
-		fread(&_frequency[data], sizeof(uint16_t), 1, fp);
+		fread(&_frequency[data], sizeof(frequency_t), 1, fp);
 	}
 	/* differences header has been read */
 

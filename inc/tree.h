@@ -12,7 +12,7 @@
 
 typedef struct node_s {
     char *sample;
-    uint16_t frequency;
+    frequency_t frequency;
     struct node_s *left, *right;
 } node_t;
 
