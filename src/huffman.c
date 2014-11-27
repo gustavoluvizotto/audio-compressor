@@ -27,7 +27,7 @@ void huffman_table(table_t *table, uint16_t count) {
 	return;
 }
 
-result_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint32_t num_samples, char** codes) {
+uint32_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint32_t num_samples, char** codes) {
 	uint32_t count;
 	size_t reading;
 	size_t i, j = 0;
@@ -85,7 +85,7 @@ result_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint
 	}
 	free(huffman_tree);
 
-	return result;
+	return count;
 }
 
 int search_tree_by_code(node_t *node, char* code) {
@@ -222,7 +222,6 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 	char** binaries;					/* Samples in binaries */
 	result_t result;					/* Return result */
 	uint32_t count = 0;					/* Count number of frequencies differents from zero */
-	size_t size;
 	FILE *fp;
 
 	binaries = (char**) malloc(num_samples * sizeof(char*));
@@ -299,7 +298,7 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 			i++;
 		}
 		fwrite(&c, sizeof(unsigned char), 1, fp); 		/* write the last c byte */
-		fseek(fp, size+sizeof(uint32_t), SEEK_SET);	/* jump and stop on the huffman header (number of bits field) */
+		fseek(fp, 9+sizeof(uint32_t), SEEK_SET);	/* jump and stop on the huffman header (number of bits field) */
 		fwrite(&bits, sizeof(uint8_t), 1, fp); 			/* write the number of bits of the last c byte without stuffing 0 */
 	}
 	/* free memory and close file */

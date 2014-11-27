@@ -168,7 +168,7 @@ result_t compress(char out_file[]) {
 
 	data_channel_size = number_of_samples/num_channels;
 	TRACE("Number of samples per channel: %u\n", data_channel_size);
-	/*number_of_samples = 16;*/
+	/*number_of_samples = 16;		 FOR example.wav ONLY! */
 	tree_create(&huffman_tree);
 	codes = (char**) malloc(number_of_samples * sizeof(char*));
 
@@ -289,17 +289,18 @@ result_t compress(char out_file[]) {
 	return result;
 }
 
-void write_intermediate(char *bin_file) {
+void write_intermediate(char *bin_file, uint32_t num_samples) {
 	FILE *fp;
 	size_t i;
-	uint32_t num_samples = data_sample[0]+ data_sample[1]+ data_sample[2] + data_sample[3];
+	/*uint32_t num_samples = data_sample[0]+ data_sample[1]+ data_sample[2] + data_sample[3];*/
 
-	fp = fopen(bin_file, "wb+");
+	fp = fopen(bin_file, "rb+");
 
 	fseek(fp, 9, SEEK_SET);
 
 	for(i = 0; i < num_samples; i++) {
 		fwrite(&data_sample[i], sizeof(uint8_t), 1, fp);
+		TRACE("%02X\n", data_sample[i]);
 	}
 
 	fclose(fp);
@@ -323,6 +324,7 @@ result_t decompress(char* in_file) {
 	uint8_t *aux_data_sample = NULL;
 	int16_t sign = 1;
 	uint32_t num_samples;
+	uint32_t header_counter = 0;
 
 	/* creating template wav file */
 	memset(riff_chunk.chunk_id, '\0', 4 * sizeof(char));
@@ -400,13 +402,15 @@ result_t decompress(char* in_file) {
 					codes[k] = (char*) malloc(40 * sizeof(char));
 				}
 
-				result = huffman_decompress(fp, &table, frequency, num_samples, codes);
+				header_counter = huffman_decompress(fp, &table, frequency, num_samples, codes);
+								 	 	 	 	   /* data              frequency             bits               count            num_samples*/
+				header_counter = header_counter * (sizeof(uint8_t) + sizeof(uint16_t)) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint32_t);
 				for (k = 0; k < num_samples; k++) {
 					data_sample[k] = (uint8_t) search_code(table, codes[k]);
 				}
 				printf("Huffman decompress ok!\n");
 				fclose(fp);
-				write_intermediate(in_file);
+				write_intermediate(in_file, num_samples);
 				break;
 			case 2:				/* Differences compression */
 				printf("Differences decompressing...\n");
@@ -430,7 +434,9 @@ result_t decompress(char* in_file) {
 				for (j = 0; j < num_samples; j++) {
 					aux_data_sample[j] = 0;
 				}
-				result = differences_decompress(fp, frequency, num_samples, codes);
+				header_counter = differences_decompress(fp, frequency, num_samples, codes);
+	 	 	 	   	   	   	   	   	   	   	   	   /* data              frequency             bits               count          num_samples */
+				header_counter = header_counter * (sizeof(uint8_t) + sizeof(uint16_t)) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint32_t);
 				for (k = 0; k < num_samples; k++) {
 					sign = 1;
 					if (codes[k][0] == '0') {			/* check if we need to complement the code */
@@ -446,7 +452,7 @@ result_t decompress(char* in_file) {
 				}
 				printf("Differences decompress ok!\n");
 				fclose(fp);
-				write_intermediate(in_file);
+				write_intermediate(in_file, num_samples);
 				break;
 			case 3:				/* MDCT compression */
 				break;
@@ -455,6 +461,7 @@ result_t decompress(char* in_file) {
 		}
 	}
 	num_samples = data_chunk.sub_chunk2_size;
+	/*num_samples = 16;	 FOR example.wav ONLY! */
 	out_file = (char*) malloc((strlen(in_file) - 3) * sizeof(char));
 	memset(out_file, '\0', (strlen(in_file) - 3) * sizeof(char));
 	strncpy(out_file, in_file, (strlen(in_file) - 4) * sizeof(char));

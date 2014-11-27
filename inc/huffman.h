@@ -32,7 +32,7 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 char* get_code(node_t* root, uint8_t data);
 void huffman_code(node_t* root, char* data, char* code);
 int count_ocurrencies(char* str, char c);
-result_t huffman_decompress(FILE *fp, table_t* table, uint16_t *_frequency, uint32_t num_samples, char** codes);
+uint32_t huffman_decompress(FILE *fp, table_t* table, uint16_t *_frequency, uint32_t num_samples, char** codes);
 void generate_table(node_t *root, table_t *table, uint16_t *frequency);
 int search_code(table_t table, char *code);
 

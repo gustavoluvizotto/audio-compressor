@@ -130,7 +130,6 @@ void write_differences(uint16_t *_frequency, char **codes, char *out_file,  uint
 	uint8_t k;							/* Index to write in the file */
 	uint8_t bits = 0;					/* Used to control the number of bits in byte c */
 	uint32_t count = 0;					/* Count number of frequencies differents from zero */
-	size_t size;
 	FILE *fp;
 	char* huffman_code = NULL;
 
@@ -220,7 +219,7 @@ int16_t binary_to_byte(char *code) {
 	return byte;
 }
 
-result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_samples, char** codes) {
+uint32_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_samples, char** codes) {
 	uint32_t count;
 	size_t reading;
 	int i;
@@ -312,7 +311,7 @@ result_t differences_decompress(FILE *fp, uint16_t *_frequency, uint32_t num_sam
 	}
 	free(huffman_tree);
 
-	return result;
+	return count;
 }
 
 void perform_one_complement(char *code) {
