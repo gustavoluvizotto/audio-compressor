@@ -230,11 +230,11 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 	/* getting the size of the file before writting the huffman header and data. It is
 	 * useful to store the number of stuffing bits in the header that has gotten in the
 	 * final of write proccess. */
-	fp = fopen(out_file, "rb");
+	/*fp = fopen(out_file, "rb");
 	fseek(fp, 0L, SEEK_END);
 	size = ftell(fp);
 	fseek(fp, 0L, SEEK_SET);
-	fclose(fp);
+	fclose(fp);*/
 
 	fp = fopen(out_file, "rb+");
 	if (fp == NULL) {
@@ -243,7 +243,7 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 		result = -ERR_FAIL;
 		return result;
 	}
-	fseek(fp, 0, SEEK_END);
+	fseek(fp, 9, SEEK_SET);
 
 	/* Writing Huffman header */
 	fwrite(&num_samples, sizeof(uint32_t), 1, fp);
@@ -299,7 +299,7 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 			i++;
 		}
 		fwrite(&c, sizeof(unsigned char), 1, fp); 		/* write the last c byte */
-		fseek(fp, size+sizeof(num_samples), SEEK_SET);	/* jump and stop on the huffman header (number of bits field) */
+		fseek(fp, size+sizeof(uint32_t), SEEK_SET);	/* jump and stop on the huffman header (number of bits field) */
 		fwrite(&bits, sizeof(uint8_t), 1, fp); 			/* write the number of bits of the last c byte without stuffing 0 */
 	}
 	/* free memory and close file */

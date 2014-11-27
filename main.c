@@ -118,9 +118,10 @@ uint8_t search_for_equal_element(int list[], int size, int key) {
 	  return found;
 }
 
-result_t update_data(char *read_file, uint32_t *length) {
+uint32_t update_data(char *read_file) {
 	FILE *fp;
-	size_t size, begin;
+	size_t size;
+	uint32_t begin;
 	size_t i;
 	size_t reading;
 	result_t result = ERR_NO;
@@ -145,11 +146,9 @@ result_t update_data(char *read_file, uint32_t *length) {
 		}
 	}
 
-	*length = begin;
-
 	fclose(fp);
 
-	return result;
+	return begin;
 }
 
 result_t compress(char out_file[]) {
@@ -169,7 +168,7 @@ result_t compress(char out_file[]) {
 
 	data_channel_size = number_of_samples/num_channels;
 	TRACE("Number of samples per channel: %u\n", data_channel_size);
-
+	/*number_of_samples = 16;*/
 	tree_create(&huffman_tree);
 	codes = (char**) malloc(number_of_samples * sizeof(char*));
 
@@ -260,7 +259,7 @@ result_t compress(char out_file[]) {
 			TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
 			result = write_huffman(huffman_tree->root, data_sample, frequency, out_file, number_of_samples);
 			TRACE("Compressed bytes have been written!\n");
-			result = update_data(out_file, &number_of_samples);
+			number_of_samples = update_data(out_file);
 			break;
 		case 2:
 			frequency = (uint16_t*) malloc ((MAX_BITS + 1) * sizeof(uint16_t));
@@ -273,7 +272,7 @@ result_t compress(char out_file[]) {
 			TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
 			write_differences(frequency, codes, out_file, number_of_samples);
 			TRACE("Compressed bytes have been written!\n");
-			result = update_data(out_file, &number_of_samples);
+			number_of_samples = update_data(out_file);
 			break;
 		case 3:
 
@@ -288,6 +287,24 @@ result_t compress(char out_file[]) {
 	free(huffman_tree);
 
 	return result;
+}
+
+void write_intermediate(char *bin_file) {
+	FILE *fp;
+	size_t i;
+	uint32_t num_samples = data_sample[0]+ data_sample[1]+ data_sample[2] + data_sample[3];
+
+	fp = fopen(bin_file, "wb+");
+
+	fseek(fp, 9, SEEK_SET);
+
+	for(i = 0; i < num_samples; i++) {
+		fwrite(&data_sample[i], sizeof(uint8_t), 1, fp);
+	}
+
+	fclose(fp);
+
+	return;
 }
 
 result_t decompress(char* in_file) {
@@ -364,7 +381,7 @@ result_t decompress(char* in_file) {
 	}
 
 	for (i = 0; i < 2; i++) {
-		switch(modes[i]) {
+		switch(modes[1-i]) {
 			case 1:				/* Huffman compression */
 				printf("Huffman decompressing...\n");
 				fp = fopen(in_file, "rb");
@@ -379,8 +396,8 @@ result_t decompress(char* in_file) {
 				}
 				codes = (char**) malloc(num_samples * sizeof(char*));
 				table.rows = NULL;
-				for (i = 0; i < num_samples; i++) {
-					codes[i] = (char*) malloc(40 * sizeof(char));
+				for (k = 0; k < num_samples; k++) {
+					codes[k] = (char*) malloc(40 * sizeof(char));
 				}
 
 				result = huffman_decompress(fp, &table, frequency, num_samples, codes);
@@ -388,6 +405,8 @@ result_t decompress(char* in_file) {
 					data_sample[k] = (uint8_t) search_code(table, codes[k]);
 				}
 				printf("Huffman decompress ok!\n");
+				fclose(fp);
+				write_intermediate(in_file);
 				break;
 			case 2:				/* Differences compression */
 				printf("Differences decompressing...\n");
@@ -402,8 +421,8 @@ result_t decompress(char* in_file) {
 					frequency[k] = 0;
 				}
 				codes = (char**) malloc(num_samples * sizeof(char*));
-				for (i = 0; i < num_samples; i++) {
-					codes[i] = (char*) malloc(40 * sizeof(char));
+				for (k = 0; k < num_samples; k++) {
+					codes[k] = (char*) malloc(40 * sizeof(char));
 				}
 
 				differences = (int16_t*) malloc(num_samples * sizeof(int16_t));
@@ -425,8 +444,9 @@ result_t decompress(char* in_file) {
 				for (k = 0; k < num_samples; k++) {
 					data_sample[k] = aux_data_sample[k];
 				}
-
 				printf("Differences decompress ok!\n");
+				fclose(fp);
+				write_intermediate(in_file);
 				break;
 			case 3:				/* MDCT compression */
 				break;
@@ -486,7 +506,6 @@ result_t decompress(char* in_file) {
 
 	if (differences != NULL)
 		free(differences);
-	fclose(fp);
 	fclose(out_fp);
 
 	return result;
