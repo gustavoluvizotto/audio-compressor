@@ -28,11 +28,10 @@ void huffman_table(table_t *table, uint16_t count) {
 }
 
 uint32_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint32_t num_samples, char** codes) {
-	uint32_t count;
-	size_t reading;
-	size_t i, j = 0;
-	uint8_t data;
-	result_t result = -ERR_NO;
+	uint32_t count;						/* count the number of frequency-sample */
+	size_t reading;						/* fread control return */
+	size_t i, j = 0;					/* loop indexes */
+	uint8_t data;						/* data sample */
 	char target[MAX_HUFF_CODE];			/* target code to search in the table */
 	unsigned char read_byte;			/* bytes read from file */
 	tree_t *huffman_tree = NULL;		/* one huffman tree */
@@ -41,18 +40,17 @@ uint32_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint
 	huffman_tree = (tree_t*) malloc(sizeof(tree_t));
 	tree_create(&huffman_tree);
 
+	/* reading the huffman header */
 	reading = fread(&bits, sizeof(uint8_t), 1,fp);
 	if (reading != 1) {
 		TRACE("[ERROR] Fail to read file -- number of bits of the last character\n");
-		result = -ERR_FAIL;
-		return result;
+		return 0;
 	}
 
 	reading = fread(&count, sizeof(uint32_t), 1, fp);
 	if (reading != 1) {
 		TRACE("[ERROR] Fail to read file -- frequency counter\n");
-		result = -ERR_FAIL;
-		return result;
+		return 0;
 	}
 
 	for (i = 0; i < count; i++) {
@@ -60,6 +58,7 @@ uint32_t huffman_decompress(FILE *fp, table_t *table, uint16_t *_frequency, uint
 		fread(&data, sizeof(uint8_t), 1, fp);
 		fread(&_frequency[data], sizeof(uint16_t), 1, fp);
 	}
+	/* huffman header has been read */
 
 	huffman_table(table, count);
 
@@ -226,15 +225,6 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 
 	binaries = (char**) malloc(num_samples * sizeof(char*));
 
-	/* getting the size of the file before writting the huffman header and data. It is
-	 * useful to store the number of stuffing bits in the header that has gotten in the
-	 * final of write proccess. */
-	/*fp = fopen(out_file, "rb");
-	fseek(fp, 0L, SEEK_END);
-	size = ftell(fp);
-	fseek(fp, 0L, SEEK_SET);
-	fclose(fp);*/
-
 	fp = fopen(out_file, "rb+");
 	if (fp == NULL) {
 		TRACE("Error opening file.\n");
@@ -242,6 +232,7 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 		result = -ERR_FAIL;
 		return result;
 	}
+	/* skipping the common header */
 	fseek(fp, 9, SEEK_SET);
 
 	/* Writing Huffman header */
@@ -266,6 +257,7 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 		fwrite(&k, sizeof(uint8_t), 1, fp);
 		fwrite(&_frequency[k], sizeof(uint16_t), 1, fp);
 	}
+	/* huffman header has been written */
 
 	for (i = 0; i < num_samples; i++) {
 		binaries[i] = byte_to_binary(data[i]);
@@ -275,7 +267,6 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 	c = 0;
 	for(i = 0; i < num_samples; i++) {
 		code = get_code(root, data[i]); /* Obtain the huffman code for data[i] */
-		/*TRACE("Code: %8s, Datum: %02X\n", code, data[i]);*/
 		/* Write the huffman code in char c. Shift every character of code in bits of c */
 		for(j = 0; j < strlen(code); j++) {
 			c <<= 1;
@@ -298,7 +289,7 @@ result_t write_huffman(node_t *root, uint8_t *data, uint16_t *_frequency, char *
 			i++;
 		}
 		fwrite(&c, sizeof(unsigned char), 1, fp); 		/* write the last c byte */
-		fseek(fp, 9+sizeof(uint32_t), SEEK_SET);	/* jump and stop on the huffman header (number of bits field) */
+		fseek(fp, 9+sizeof(uint32_t), SEEK_SET);		/* jump (number of samples to) and stop on the huffman header (number of bits field) */
 		fwrite(&bits, sizeof(uint8_t), 1, fp); 			/* write the number of bits of the last c byte without stuffing 0 */
 	}
 	/* free memory and close file */

@@ -172,10 +172,10 @@ result_t compress(char out_file[]) {
 	uint32_t data_channel_size;		/* lenght of *data vector per channel */
 	tree_t *huffman_tree = NULL;	/* one huffman tree per channel */
 	result_t result;				/* return result */
-	uint16_t num_channels;
-	unsigned char c = 0;
-	char **codes;
-	uint16_t *frequency = NULL;	/* frequency of given sample */
+	uint16_t num_channels;			/* number of channels of the sound */
+	unsigned char c = 0;			/* byte to create the table shown in commmon.h */
+	char **codes;					/* vector of codes used in difference compress. Huffman code + value */
+	uint16_t *frequency = NULL;		/* frequency of given sample */
 
 	num_channels = fmt_chunk.num_channels;
 	TRACE("Number of channels in the audio: %hu\n", num_channels);
@@ -271,6 +271,7 @@ result_t compress(char out_file[]) {
 			TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
 			result = write_huffman(huffman_tree->root, data_sample, frequency, out_file, number_of_samples);
 			TRACE("Compressed bytes have been written!\n");
+			/* update data samples to input in an other compression, if is the case */
 			number_of_samples = update_data(out_file);
 			break;
 		case 2:
@@ -284,6 +285,7 @@ result_t compress(char out_file[]) {
 			TRACE("Writing compressed bytes. This step may take some time, please wait...\n");
 			write_differences(frequency, codes, out_file, number_of_samples);
 			TRACE("Compressed bytes have been written!\n");
+			/* update data samples to input in an other compression, if is the case */
 			number_of_samples = update_data(out_file);
 			break;
 		case 3:
@@ -301,6 +303,7 @@ result_t compress(char out_file[]) {
 	return result;
 }
 
+/* writes in an intermediate file num_samples of data_sample */
 void write_intermediate(char *bin_file, uint32_t num_samples) {
 	FILE *fp;
 	size_t i;
@@ -319,22 +322,22 @@ void write_intermediate(char *bin_file, uint32_t num_samples) {
 }
 
 result_t decompress(char* in_file) {
-	result_t result = -ERR_NO;
-	FILE *fp, *out_fp;
-	unsigned char modes_and_channels;
-	uint8_t mode;
-	int modes[3];
-	size_t i, j, k;
-	size_t writing;
-	char** codes = NULL;
-	table_t table;
-	char* out_file;
-	uint16_t *frequency = NULL;		/* frequency of given sample */
-	int16_t *differences = NULL;
-	uint8_t *aux_data_sample = NULL;
-	int16_t sign = 1;
-	uint32_t num_samples;
-	uint32_t header_counter = 0;
+	result_t result = -ERR_NO;				/* control return functions */
+	FILE *fp, *out_fp;						/* in and out file pointer */
+	unsigned char modes_and_channels;		/* for read the byte who stores modes of compression and the channels of wav */
+	uint8_t mode;							/* modes of compression */
+	int modes[3];							/* modes of compression */
+	size_t i, j, k;							/* loop indexes */
+	size_t writing;							/* control of writable bytes */
+	char** codes = NULL;					/* vector of data codes */
+	table_t table;							/* huffman table */
+	char* out_file;							/* name of the output file */
+	uint16_t *frequency = NULL;				/* frequency of given sample */
+	int16_t *differences = NULL;			/* differences vector (differences decompression) */
+	uint8_t *aux_data_sample = NULL;		/* intermediate data_sample */
+	int16_t sign = 1;						/* sign byte to perform one's complement */
+	uint32_t num_samples;					/* number of samples of each compression mode */
+	uint32_t header_counter = 0;			/* counts the number of bytes of a header (difference or huffman) */
 
 	/* creating template wav file */
 	memset(riff_chunk.chunk_id, '\0', 4 * sizeof(char));
@@ -369,6 +372,7 @@ result_t decompress(char* in_file) {
 
 	fclose(fp);
 
+	/* re creating the modes of compression based on the table shown in common.h */
 	switch((mode >> 2) & 0x03) {
 		case 0:
 			modes[0] = mode & 0x03;
@@ -397,7 +401,9 @@ result_t decompress(char* in_file) {
 			case 1:				/* Huffman compression */
 				TRACE("Huffman decompressing...\n");
 				fp = fopen(in_file, "rb");
+				/* skipping common header... */
 				fseek(fp, 9, SEEK_SET);
+				/* and getting the number of samples of this compression */
 				fread(&num_samples, sizeof(uint32_t), 1, fp);
 
 				data_sample = (uint8_t*) malloc(num_samples * sizeof(uint8_t));
@@ -421,13 +427,16 @@ result_t decompress(char* in_file) {
 				TRACE("Huffman decompress ok!\n");
 				fclose(fp);
 				TRACE("Updating the .bin file...\n");
+				/* write in the bin file the data of the next compression to pass through the next decompressor, if it have */
 				write_intermediate(in_file, num_samples);
 				TRACE(".bin file has been updated!\n");
 				break;
 			case 2:				/* Differences compression */
 				TRACE("Differences decompressing...\n");
 				fp = fopen(in_file, "rb");
+				/* skipping common header... */
 				fseek(fp, 9, SEEK_SET);
+				/* and getting the number of samples of this compression */
 				fread(&num_samples, sizeof(uint32_t), 1, fp);
 
 				data_sample = (uint8_t*) malloc(num_samples * sizeof(uint8_t));
@@ -446,6 +455,7 @@ result_t decompress(char* in_file) {
 				for (j = 0; j < num_samples; j++) {
 					aux_data_sample[j] = 0;
 				}
+
 				header_counter = differences_decompress(fp, frequency, num_samples, codes);
 	 	 	 	   	   	   	   	   	   	   	   	   /* data              frequency             bits               count          num_samples */
 				header_counter = header_counter * (sizeof(uint8_t) + sizeof(uint16_t)) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint32_t);
@@ -455,6 +465,7 @@ result_t decompress(char* in_file) {
 						perform_one_complement(codes[k]);
 						sign = -1;
 					}
+					/* creating the differences vector */
 					differences[k] = binary_string_to_int16(codes[k]);
 					differences[k] = sign * differences[k];
 				}
@@ -465,6 +476,7 @@ result_t decompress(char* in_file) {
 				TRACE("Differences decompress ok!\n");
 				fclose(fp);
 				TRACE("Updating the .bin file...\n");
+				/* write in the bin file the data of the next compression to pass through the next decompressor, if it have */
 				write_intermediate(in_file, num_samples);
 				TRACE(".bin file has been updated!\n");
 				break;
@@ -474,6 +486,8 @@ result_t decompress(char* in_file) {
 				break;
 		}
 	}
+
+	/* writing the final decompressed file! */
 	num_samples = data_chunk.sub_chunk2_size;
 	out_file = (char*) malloc((strlen(in_file) - 3) * sizeof(char));
 	memset(out_file, '\0', (strlen(in_file) - 3) * sizeof(char));
@@ -535,9 +549,10 @@ int main () {
 	char in_file[40] = "";					/* input file to read */
 	result_t result = -ERR_NO;				/* return functions */
 	char mode;								/* compress/decompress mode */
-	char out_file[40] = "";
+	char out_file[40] = "";					/* output file to write .bin or the final .wav */
 
-	printf("Choose compress(c) or decompress(d): ");
+	printf("Choose compress(c), decompress(d) or help (h) for further informations\n");
+	printf("Option: ");
 	/*scanf("%c", &mode);*/
 	mode = 'd';
 
