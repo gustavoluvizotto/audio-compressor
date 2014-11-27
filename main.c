@@ -26,6 +26,20 @@ fmt_chunk_t fmt_chunk;			/* header of wav file */
 data_chunk_t data_chunk;		/* header of wav file */
 uint32_t number_of_samples = 0;
 
+void print_informations() {
+	printf("Grupo\n");
+	printf("Adailto Aparecido Caramano - \n");
+	printf("Gustavo Luvizotto Cesar - 6783544\n");
+	printf("Ivan Donisete Lonel - \n");
+	printf("\n");
+	printf("O usuario pode comprimir seu arquivo wav de som de no maximo 16 canais\n");
+	printf("utilizando o metodo de diferencas e/ou de huffman, podendo combina-los como desejar.\n");
+	printf("Nem sempre a combinacao das compressoes gera um arquivo pequeno. A melhor compressao\n");
+	printf("obtida foi usando diferencas (que usa huffman implicitamente para indexacao).\n");
+	printf("O wav original deve possuir 8 bits por amostra e nao deve ser comprimido.");
+	printf("\n");
+}
+
 void print_headers() {
 	PRINT_STRUCT(&riff_chunk);
 	PRINT_STRUCT(&fmt_chunk);
@@ -168,7 +182,6 @@ result_t compress(char out_file[]) {
 
 	data_channel_size = number_of_samples/num_channels;
 	TRACE("Number of samples per channel: %u\n", data_channel_size);
-	/*number_of_samples = 16;		 FOR example.wav ONLY! */
 	tree_create(&huffman_tree);
 	codes = (char**) malloc(number_of_samples * sizeof(char*));
 
@@ -236,12 +249,12 @@ result_t compress(char out_file[]) {
 
 	if (modes[0] == 0) {
 		result = -ERR_NO;
-		TRACE("Run again and choose one compression mode\n");
+		printf("Run again and choose one compression mode\n");
 		system_pause();
 		return result;
 	}
 
-	TRACE("Writing in the output file...\n");
+	TRACE("Writing the common header...\n");
 	result = write_header_to_file(out_file, riff_chunk, fmt_chunk, c);
 	TRACE("Common header has been written!\n");
 
@@ -252,7 +265,6 @@ result_t compress(char out_file[]) {
 			for (k = 0; k <= MAX_SAMPLE; k++) {
 				frequency[k] = 0;
 			}
-
 			TRACE("Comprresing by Huffman...\n");
 			huffman_tree->root = huffman_compress(data_sample, frequency, number_of_samples, MAX_SAMPLE);
 			TRACE("Huffman compress successfull!\n");
@@ -281,7 +293,7 @@ result_t compress(char out_file[]) {
 			break;
 		}
 	}
-
+	printf("Compression completed!\n");
 	/* free memory */
 	free(data_sample);
 	free(huffman_tree);
@@ -292,7 +304,6 @@ result_t compress(char out_file[]) {
 void write_intermediate(char *bin_file, uint32_t num_samples) {
 	FILE *fp;
 	size_t i;
-	/*uint32_t num_samples = data_sample[0]+ data_sample[1]+ data_sample[2] + data_sample[3];*/
 
 	fp = fopen(bin_file, "rb+");
 
@@ -300,7 +311,6 @@ void write_intermediate(char *bin_file, uint32_t num_samples) {
 
 	for(i = 0; i < num_samples; i++) {
 		fwrite(&data_sample[i], sizeof(uint8_t), 1, fp);
-		TRACE("%02X\n", data_sample[i]);
 	}
 
 	fclose(fp);
@@ -341,7 +351,7 @@ result_t decompress(char* in_file) {
 
 	fp = fopen(in_file, "rb");
 	if (fp == NULL) {
-		TRACE("[ERROR] Fail to open file %s\n", in_file);
+		printf("[ERROR] Fail to open file %s\n", in_file);
 		result = -ERR_FAIL;
 		return result;
 	}
@@ -385,7 +395,7 @@ result_t decompress(char* in_file) {
 	for (i = 0; i < 2; i++) {
 		switch(modes[1-i]) {
 			case 1:				/* Huffman compression */
-				printf("Huffman decompressing...\n");
+				TRACE("Huffman decompressing...\n");
 				fp = fopen(in_file, "rb");
 				fseek(fp, 9, SEEK_SET);
 				fread(&num_samples, sizeof(uint32_t), 1, fp);
@@ -408,12 +418,14 @@ result_t decompress(char* in_file) {
 				for (k = 0; k < num_samples; k++) {
 					data_sample[k] = (uint8_t) search_code(table, codes[k]);
 				}
-				printf("Huffman decompress ok!\n");
+				TRACE("Huffman decompress ok!\n");
 				fclose(fp);
+				TRACE("Updating the .bin file...\n");
 				write_intermediate(in_file, num_samples);
+				TRACE(".bin file has been updated!\n");
 				break;
 			case 2:				/* Differences compression */
-				printf("Differences decompressing...\n");
+				TRACE("Differences decompressing...\n");
 				fp = fopen(in_file, "rb");
 				fseek(fp, 9, SEEK_SET);
 				fread(&num_samples, sizeof(uint32_t), 1, fp);
@@ -450,9 +462,11 @@ result_t decompress(char* in_file) {
 				for (k = 0; k < num_samples; k++) {
 					data_sample[k] = aux_data_sample[k];
 				}
-				printf("Differences decompress ok!\n");
+				TRACE("Differences decompress ok!\n");
 				fclose(fp);
+				TRACE("Updating the .bin file...\n");
 				write_intermediate(in_file, num_samples);
+				TRACE(".bin file has been updated!\n");
 				break;
 			case 3:				/* MDCT compression */
 				break;
@@ -461,7 +475,6 @@ result_t decompress(char* in_file) {
 		}
 	}
 	num_samples = data_chunk.sub_chunk2_size;
-	/*num_samples = 16;	 FOR example.wav ONLY! */
 	out_file = (char*) malloc((strlen(in_file) - 3) * sizeof(char));
 	memset(out_file, '\0', (strlen(in_file) - 3) * sizeof(char));
 	strncpy(out_file, in_file, (strlen(in_file) - 4) * sizeof(char));
@@ -514,7 +527,7 @@ result_t decompress(char* in_file) {
 	if (differences != NULL)
 		free(differences);
 	fclose(out_fp);
-
+	printf("Decompress proccess done! Try to listen the generated sound =)\n");
 	return result;
 }
 
@@ -534,7 +547,7 @@ int main () {
 		if (mode == 'd') {
 			printf("Enter with the path and name of the compressed file (including the .bin extension): ");
 		} else {
-			TRACE("Invalid mode!\n");
+			printf("Invalid mode!\n");
 			result = -ERR_FAIL;
 			return result;
 		}
@@ -543,6 +556,7 @@ int main () {
 	/*scanf("%s", in_file);*/
 	strcpy(in_file, "resources/up.wav.bin");
 	if (mode == 'c') {
+		TRACE("Compress mode!\n");
 		result = read_sound(in_file);
 	} else {
 		TRACE("Decompress mode!\n");
@@ -556,14 +570,14 @@ int main () {
 	}
 
 	if (fmt_chunk.bits_per_sample != 8 && mode == 'c') {
-		TRACE("Bits per sample not valid. This application accepts only 8 bits per sample!\n");
+		printf("Bits per sample not valid. This application accepts only 8 bits per sample!\n");
 		result = -ERR_FAIL;
 		system_pause();
 		return result;
 	}
 
 	if (fmt_chunk.num_channels > 16 && mode == 'c') {
-		TRACE("Number of channels exceed the limits. Max is 16!\n");
+		printf("Number of channels exceed the limits. Max is 16!\n");
 		result = -ERR_FAIL;
 		system_pause();
 		return result;
@@ -572,7 +586,7 @@ int main () {
 
 	if (mode == 'c') {
 		if (fmt_chunk.audio_format != 1) {
-			printf("Compressed file!\n");
+			printf("Compressed file! Try one that is not compressed.\n");
 			result = -ERR_FAIL;
 			system_pause();
 			return result;
