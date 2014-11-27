@@ -189,11 +189,12 @@ result_t compress(char out_file[]) {
 	}
 
 	printf("Choose the compression you want\n");
-	printf("0. Exit\n1. Huffman\n2. Differences\n3. MDCT\n");
+	printf("0. Exit\n1. Huffman\n2. Differences\n");
 
 	for (i = 0; i < 3; i++) {
 		modes[i] = -1;
 	}
+	modes[3] = 0;	/* MDCT not suported */
 
 	i = 0;
 	do {
@@ -227,7 +228,7 @@ result_t compress(char out_file[]) {
 					}
 				}
 				break;
-			case 3:
+			case 3:		/* MDCT not suported */
 				if (i == 0) {
 					c += 3;
 				} else {
@@ -244,7 +245,7 @@ result_t compress(char out_file[]) {
 			}
 			modes[i++] = ans;
 		}
-	} while (ans != 0 && i < 3);
+	} while (ans != 0 && ans != 3 && i < 2);
 
 	if (modes[0] == 0) {
 		result = -ERR_NO;
@@ -288,7 +289,6 @@ result_t compress(char out_file[]) {
 			number_of_samples = update_data(out_file);
 			break;
 		case 3:
-
 			break;
 		default:
 			break;
@@ -395,8 +395,8 @@ result_t decompress(char* in_file) {
 			break;
 	}
 
-	for (i = 0; i < 2; i++) {
-		switch(modes[1-i]) {
+	for (i = 0; i < 3; i++) {
+		switch(modes[2-i]) {
 			case 1:				/* Huffman compression */
 				TRACE("Huffman decompressing...\n");
 				fp = fopen(in_file, "rb");
@@ -479,7 +479,7 @@ result_t decompress(char* in_file) {
 				write_intermediate(in_file, num_samples);
 				TRACE(".bin file has been updated!\n");
 				break;
-			case 3:				/* MDCT compression */
+			case 3:				/* MDCT compression not suported */
 				break;
 			default:			/* Exit case (0) */
 				break;
