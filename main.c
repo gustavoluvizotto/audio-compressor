@@ -2,7 +2,6 @@
  * main.c
  *
  *  Created on: Oct 28, 2014
- *      Author: gustavo
  *
  *  Definitions:
  *  	Bits per sample = 8
@@ -27,14 +26,14 @@ uint32_t number_of_samples = 0;
 
 void print_informations() {
 	printf("Grupo\n");
-	printf("Adailto Aparecido Caramano - \n");
+	printf("Adailto Aparecido Caramano - 7126802\n");
 	printf("Gustavo Luvizotto Cesar - 6783544\n");
-	printf("Ivan Donisete Lonel - \n");
+	printf("Ivan Donisete Lonel - 6766044\n");
 	printf("\n");
 	printf("O usuario pode comprimir seu arquivo wav de som de no maximo 16 canais\n");
 	printf("utilizando o metodo de diferencas e/ou de huffman, podendo combina-los como desejar.\n");
 	printf("Nem sempre a combinacao das compressoes gera um arquivo pequeno. A melhor compressao\n");
-	printf("obtida foi usando diferencas (que usa huffman implicitamente para indexacao).\n");
+	printf("obtida foi usando diferencas (que usa huffman implicitamente para separacao).\n");
 	printf("O wav original deve possuir 8 bits por amostra e nao deve ser comprimido.");
 	printf("\n");
 }
@@ -329,7 +328,6 @@ result_t decompress(char* in_file) {
 	size_t i, j, k;							/* loop indexes */
 	size_t writing;							/* control of writable bytes */
 	char** codes = NULL;					/* vector of data codes */
-	table_t table;							/* huffman table */
 	char* out_file;							/* name of the output file */
 	frequency_t *frequency = NULL;			/* frequency of given sample */
 	int16_t *differences = NULL;			/* differences vector (differences decompression) */
@@ -412,17 +410,13 @@ result_t decompress(char* in_file) {
 					frequency[k] = 0;
 				}
 				codes = (char**) malloc(num_samples * sizeof(char*));
-				table.rows = NULL;
+
 				for (k = 0; k < num_samples; k++) {
 					codes[k] = (char*) malloc(MAX_CODE * sizeof(char));
 				}
 
-				header_counter = huffman_decompress(fp, &table, frequency, num_samples, codes);
-								 	 	 	 	   /* data              frequency             bits               count            num_samples*/
-				header_counter = header_counter * (sizeof(uint8_t) + sizeof(frequency_t)) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint32_t);
-				for (k = 0; k < num_samples; k++) {
-					data_sample[k] = (uint8_t) search_code(table, codes[k]);
-				}
+				header_counter = huffman_decompress(fp, frequency, num_samples, codes);
+
 				TRACE("Huffman decompress ok!\n");
 				fclose(fp);
 				TRACE("Updating the .bin file...\n");
@@ -552,8 +546,13 @@ int main () {
 
 	printf("Choose compress(c), decompress(d) or help (h) for further informations\n");
 	printf("Option: ");
-	/*scanf("%c", &mode);*/
-	mode = 'd';
+	scanf("%c", &mode);
+
+	if (mode == 'h') {
+		print_informations();
+		system_pause();
+		return result;
+	}
 
 	if (mode == 'c') {
 		printf("Enter with the path and name of the sound file (including the .wav extension): ");
@@ -567,8 +566,8 @@ int main () {
 		}
 	}
 	fflush(stdin);
-	/*scanf("%s", in_file);*/
-	strcpy(in_file, "resources/up.wav.bin");
+	scanf("%s", in_file);
+
 	if (mode == 'c') {
 		TRACE("Compress mode!\n");
 		result = read_sound(in_file);

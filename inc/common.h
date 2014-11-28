@@ -2,7 +2,6 @@
  * common.h
  *
  *  Created on: Oct 31, 2014
- *      Author: gustavo
  */
 
 #ifndef INC_COMMON_H_

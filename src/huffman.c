@@ -2,7 +2,6 @@
  * huffman.c
  *
  *  Created on: Nov 1, 2014
- *      Author: gustavo
  *
  */
 
@@ -25,7 +24,7 @@ void huffman_table(table_t *table, uint16_t count) {
 	return;
 }
 
-uint32_t huffman_decompress(FILE *fp, table_t *table, frequency_t *_frequency, uint32_t num_samples, char** codes) {
+uint32_t huffman_decompress(FILE *fp, frequency_t *_frequency, uint32_t num_samples, char** codes) {
 	uint32_t count;						/* count the number of frequency-sample */
 	size_t reading;						/* fread control return */
 	size_t i, j = 0;					/* loop indexes */
@@ -34,6 +33,9 @@ uint32_t huffman_decompress(FILE *fp, table_t *table, frequency_t *_frequency, u
 	unsigned char read_byte;			/* bytes read from file */
 	tree_t *huffman_tree = NULL;		/* one huffman tree */
 	uint8_t bits = 0;					/* number of bits of the last byte */
+	uint32_t header_counter;			/* count the number of bytes in the huffman header */
+	char *buffer = NULL;
+	char *sample = NULL;
 
 	huffman_tree = (tree_t*) malloc(sizeof(tree_t));
 	tree_create(&huffman_tree);
@@ -58,11 +60,11 @@ uint32_t huffman_decompress(FILE *fp, table_t *table, frequency_t *_frequency, u
 	}
 	/* huffman header has been read */
 
-	huffman_table(table, count);
+	/*huffman_table(table, count);*/
 
 	huffman_tree->root = huffman(_frequency, MAX_SAMPLE);
 
-	generate_table(huffman_tree->root, table, _frequency);
+	/*generate_table(huffman_tree->root, table, _frequency);*/
 
 	/* decode every byte read from data sector in input file */
 	memset(target, '\0', MAX_HUFF_CODE);
@@ -80,9 +82,21 @@ uint32_t huffman_decompress(FILE *fp, table_t *table, frequency_t *_frequency, u
 			}
 		}
 	}
+
+	buffer = (char*) malloc(MAX_CODE * sizeof(char));
+ 	   	   	   	   	   	   	   	   	   	   /* data              frequency             bits               count            num_samples*/
+	header_counter = count * (sizeof(uint8_t) + sizeof(frequency_t)) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint32_t);
+	for (i = 0; i < num_samples; i++) {
+		sample = get_leaf(huffman_tree->root, codes[i]);
+		if (sample != NULL) {
+			memset(buffer, '\0', (strlen(sample) - 1) * sizeof(char));
+			strncpy(buffer, (sample+1), (strlen(sample) - 2) * sizeof(char));
+			data_sample[i] = (uint8_t) string_to_int(buffer);
+		}
+	}
 	free(huffman_tree);
 
-	return count;
+	return header_counter;
 }
 
 int search_tree_by_code(node_t *node, char* code) {

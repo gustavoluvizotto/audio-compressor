@@ -2,7 +2,6 @@
  * wav.h
  *
  *  Created on: Oct 30, 2014
- *      Author: gustavo
  */
 
 #ifndef INC_WAV_H_

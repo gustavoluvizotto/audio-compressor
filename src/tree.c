@@ -2,7 +2,6 @@
  * tree.c
  *
  *  Created on: Nov 1, 2014
- *      Author: gustavo
  */
 
 #include "../inc/tree.h"

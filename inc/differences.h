@@ -2,7 +2,6 @@
  * differences.h
  *
  *  Created on: Nov 21, 2014
- *      Author: ivan
  */
 
 #ifndef INC_DIFFERENCES_H_

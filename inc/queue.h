@@ -2,7 +2,6 @@
  * queue
  *
  *  Created on: Nov 1, 2014
- *      Author: gustavo
  */
 
 #ifndef INC_QUEUE_H_
