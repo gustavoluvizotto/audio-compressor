@@ -1,7 +1,7 @@
 /*******************************************
  * Projeto 2				   *
  * SCC - 0661 Multimídia e Hipermídia	   *
- * 28/11/2014				   *
+ * 29/11/2014				   *
  *******************************************/
 
  _______________________________________________________
@@ -44,4 +44,9 @@ amostra e não pode possuir algum tipo de compressão.
    Obs.: A compressão/descompressão por Huffman (opção 1) demora muito tempo dependendo
 do tamanho do arquivo pois o alcance das amostras são de 256 posições, diferente da 
 compressão/descompressão por diferenças que o alcance é de 9 posições (de 0 à 8 bits
-usado no sss).
+usado no sss). Logo, o método pode demorar até aproximadamente 32 vezes mais utilizando
+Huffman.
+   Obs2.: O programa utiliza o arquivo comprimido (.bin) na descompressão como um arquivo
+intermediario para desempacotar compressões anteriores. Ou seja, caso seja preciso analisar
+o percentual de compressão do programa, deverá ser analisado o arquivo resultante .bin logo
+após a compressão.

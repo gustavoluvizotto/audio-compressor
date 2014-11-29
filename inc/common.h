@@ -40,7 +40,7 @@
 
 #define COMMON_HEADER 9
 
-typedef uint16_t frequency_t;
+typedef uint32_t frequency_t;
 
 typedef int8_t result_t;
 
