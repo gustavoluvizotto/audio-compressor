@@ -1,0 +1,1 @@
+Compressor/Decompressor of an wav file without compression with Huffman, Differences and/or MDCT algorithm.
