@@ -25,16 +25,21 @@ data_chunk_t data_chunk;		/* header of wav file */
 uint32_t number_of_samples = 0;
 
 void print_informations() {
-	printf("Grupo\n");
-	printf("Adailto Aparecido Caramano - 7126802\n");
-	printf("Gustavo Luvizotto Cesar - 6783544\n");
-	printf("Ivan Donisete Lonel - 6766044\n");
+	printf(" ---------------------------------------------------------------------\n");
+	printf("| Group:                                                              |\n");
+	printf("| Gustavo Luvizotto Cesar - 6783544                                   |\n");
+	printf("| Ivan Donisete Lonel     - 6766044                                   |\n");
+	printf(" ---------------------------------------------------------------------\n");
 	printf("\n");
-	printf("O usuario pode comprimir seu arquivo wav de som de no maximo 16 canais\n");
-	printf("utilizando o metodo de diferencas e/ou de huffman, podendo combina-los como desejar.\n");
-	printf("Nem sempre a combinacao das compressoes gera um arquivo pequeno. A melhor compressao\n");
-	printf("obtida foi usando diferencas (que usa huffman implicitamente para separacao).\n");
-	printf("O wav original deve possuir 8 bits por amostra e nao deve ser comprimido.");
+	printf(" ---------------------------------------------------------------------\n");
+	printf("| The user can compress your 16-channel (at maximum) wav sound file   |\n");
+	printf("| using the differences and/or huffman coding methods, combining them |\n");
+	printf("| or not, as user desired. The combination of the compressions not    |\n");
+	printf("| always generates a small output file. The best compression obtained |\n");
+	printf("| was using differences (that uses huffman coding implicitly). The    |\n");
+	printf("| original wav need to have 8 bits per sample and do not have been    |\n");
+	printf("| compress.                                                           |\n");
+	printf(" ---------------------------------------------------------------------\n");
 	printf("\n");
 }
 
@@ -49,7 +54,7 @@ void print_headers() {
 }
 
 void system_pause() {
-    printf("Press <ENTER> to exit... ");
+    printf("Press <ENTER> to exit... \n");
     fflush(stdin);
     getchar();
 }
@@ -193,7 +198,7 @@ result_t compress(char out_file[]) {
 	for (i = 0; i < 3; i++) {
 		modes[i] = -1;
 	}
-	modes[3] = 0;	/* MDCT not suported */
+	modes[2] = 0;	/* MDCT not suported */
 
 	i = 0;
 	do {

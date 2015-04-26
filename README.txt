@@ -1,32 +1,63 @@
 /*******************************************
- * Projeto 2				   *
- * SCC - 0661 Multimídia e Hipermídia	   *
+ * Project 2				   *
+ * SCC0661 - Multimedia and Hypermedia	   *
  * 29/11/2014				   *
  *******************************************/
 
  _______________________________________________________
-|Integrante		     |      	(Nº USP) 	|
+| Group members		     |      	(USP ID) 	|
 |----------------------------|--------------------------|
-| Adailto Aparecido Caramano |		(7126802)	|
 | Gustavo Luvizotto Cesar    |		(6783544)	|
 | Ivan Donisete Lonel        | 		(6766044)	|
- _______________________________________________________|
- 
- Como usar:
- Escolha uma opção entre comprimir, descomprimir ou informações sobre o trabalho.
+|____________________________|__________________________|
+
+  1) About the project
+  Objectives: The principal objective is to implement some compression/decompression 
+tecniques applyed to digital audio.
+  
+  Will be employed for coding techniques of differences and Huffman. The techniques 
+should be applied, combined or isolated way, in WAV format for an audio file 
+without compression. The resulting data compression should be stored in a binary 
+file recording only the bits that represent each generated code.
+  
+  Expected inputs: 
+    compression: a WAV file without compression.
+    decompression: a binary file containing the representation of the compressed 
+    audio file.
+    
+  Expected outputs:
+    compression: binary file containing the bitstream that represents the compressed
+    audio file.
+    decompression: an approximation of original WAV file not compressed.
+      
+  2) How to build and execute
+  To build, you need to go to build folder:
+  
+    cd build
+    
+  And then, build the project using make:
+  
+    make all
+    
+  Will generate "audio-compressor" binary. To execute, just do:
+  
+    ./audio-compressor
+      
+  3) How to use
+  Choose one option between compress, decompress or informations about the work.
  
  "Choose compress(c), decompress(d) or help (h) for further informations
   Option: c"
   
-  No exemplo usou-se a opção de compressão. Em seguida, entre com o caminho do arquivo
-a ser comprimido.
+  In the example, was used the compression option. Next, enter with the path of the file
+to be compressed.
 
-  "Enter with the path and name of the sound file (including the .wav extension): resources/ghost.wav"
+  "Enter with the path and name of the sound file (including the .wav extension): ../resources/ghost.wav"
   
-  No exemplo o arquivo ghost.wav estava no diretorio resources. Se fosse escolhido o modo de 
-descompressão, a entrada nesse caso deveria ser resources/ghosts.wav.bin
-  
-  Em seguida escolha a compressão que deseja
+  In the example the "ghost.wav" file was in the directory "resources", above your actual directory (if 
+you are executing inside "build" directory). If has choosen the decompress mode, then the input should 
+be "../resources/ghost.wav.bin".
+  Next, choose the compression you want.
   
   "Choose the compression you want
    0. Exit
@@ -35,18 +66,18 @@ descompressão, a entrada nesse caso deveria ser resources/ghosts.wav.bin
    1
    2"
    
-   No exemplo foi inserido compressão por huffman e por diferenças. A compressão por 
-diferenças utiliza códigos de huffman para servir de separador. O programa aceita 
-compressão apenas por huffman, apenas differenças, huffman e diferenças ou diferenças e 
-huffman.
-   O arquivo de som wav original pode possuir até 16 canais, deve ter 8 bits por 
-amostra e não pode possuir algum tipo de compressão.
-   Obs.: A compressão/descompressão por Huffman (opção 1) demora muito tempo dependendo
-do tamanho do arquivo pois o alcance das amostras são de 256 posições, diferente da 
-compressão/descompressão por diferenças que o alcance é de 9 posições (de 0 à 8 bits
-usado no sss). Logo, o método pode demorar até aproximadamente 32 vezes mais utilizando
-Huffman.
-   Obs2.: O programa utiliza o arquivo comprimido (.bin) na descompressão como um arquivo
-intermediario para desempacotar compressões anteriores. Ou seja, caso seja preciso analisar
-o percentual de compressão do programa, deverá ser analisado o arquivo resultante .bin logo
-após a compressão.
+  In the example above, was chosen huffman and differences compression. The compression by 
+differences uses the huffman code to serve as a delimiter. The program accept compression 
+only huffman, only differences, huffman and differences or differences and huffman. 
+The original wav file must be up to 16 channels, 8 bits per sample and do not own 
+any kind of compression previously. 
+
+PS1: The compression/decompression by Huffman (1st option) takes too long depending on 
+the size of the file, because the samples range could be 0 to 255 (256 positions), that's 
+different from differences compression/decompression that uses 9 positions (from 0 to 8 
+bits used in SSS). Therefore, the method could take about 32 times more using Huffman 
+compression. 
+PS2: The program uses the compressed file (.bin) in the decompression operation as a 
+intermediate file to unpack previously compressions. In other words, if it is necessary 
+analyze the compress rate of the program, might be analysed the resultant file (.bin) 
+after the compression.
