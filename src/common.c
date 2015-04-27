@@ -119,3 +119,53 @@ int16_t binary_string_to_int16(char *string) {
 
 	return diff;
 }
+
+void print_informations() {
+	printf(" ---------------------------------------------------------------------\n");
+	printf("| Group:                                                              |\n");
+	printf("| Gustavo Luvizotto Cesar - 6783544                                   |\n");
+	printf("| Ivan Donisete Lonel     - 6766044                                   |\n");
+	printf(" ---------------------------------------------------------------------\n");
+	printf("\n");
+	printf(" ---------------------------------------------------------------------\n");
+	printf("| The user can compress your 16-channel (at maximum) wav sound file   |\n");
+	printf("| using the differences and/or huffman coding methods, combining them |\n");
+	printf("| or not, as user desired. The combination of the compressions not    |\n");
+	printf("| always generates a small output file. The best compression obtained |\n");
+	printf("| was using differences (that uses huffman coding implicitly). The    |\n");
+	printf("| original wav need to have 8 bits per sample and do not have been    |\n");
+	printf("| compress.                                                           |\n");
+	printf(" ---------------------------------------------------------------------\n");
+	printf("\n");
+}
+
+void system_pause() {
+    printf("Press <ENTER> to exit... \n");
+    fflush(stdin);
+    getchar();
+}
+
+uint8_t search_for_equal_element(int list[], int size, int key) {
+	  uint8_t found = FALSE;
+	  int i;
+
+	  for ( i = 0; i < size; i++ ) {
+	    if ( key == list[i] )
+	      break;
+	  }
+	  if ( i < size ) {
+	    found = TRUE;
+	  }
+
+	  return found;
+}
+
+void print_headers() {
+	PRINT_STRUCT(&riff_chunk);
+	PRINT_STRUCT(&fmt_chunk);
+	PRINT_STRUCT(&data_chunk);
+
+	TRACE("riff: %lu \n", sizeof(riff_chunk));
+	TRACE("fmt: %lu \n", sizeof(fmt_chunk));
+	TRACE("data: %lu \n", sizeof(data_chunk));
+}

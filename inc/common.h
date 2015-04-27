@@ -40,18 +40,26 @@
 
 #define COMMON_HEADER 9
 
+#define PRINT_STRUCT(p) print_struct((p), sizeof(*(p)))
+
 typedef uint32_t frequency_t;
 
 typedef int8_t result_t;
 
-#define PRINT_STRUCT(p) print_struct((p), sizeof(*(p)))
+riff_chunk_t riff_chunk;		/* header of wav file */
+fmt_chunk_t fmt_chunk;			/* header of wav file */
+data_chunk_t data_chunk;		/* header of wav file */
 
 void print_struct(void const *vp, size_t n);
-
 void reverse(char s[]);
 char *byte_to_binary(uint8_t x);
 int string_to_int(char *a);
 int16_t binary_string_to_int16(char *string);
+void print_informations();
+void system_pause();
+uint8_t search_for_equal_element(int list[], int size, int key);
+void print_headers();
+result_t write_header_to_file(char *out_file, riff_chunk_t riff_chunk, fmt_chunk_t fmt_chunk, unsigned char c);
 
 /*
  * Combinations of codification modes and the binary representative
@@ -75,6 +83,5 @@ int16_t binary_string_to_int16(char *string);
  *  D = Differences
  *  M = MDCT
  */
-result_t write_header_to_file(char *out_file, riff_chunk_t riff_chunk, fmt_chunk_t fmt_chunk, unsigned char c);
 
 #endif /* INC_COMMON_H_ */

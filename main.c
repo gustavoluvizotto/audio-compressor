@@ -12,6 +12,7 @@
  */
 
 #include "inc/differences.h"
+#include "inc/common.h"
 #include <stdio.h>
 
 /*
@@ -19,45 +20,7 @@
 #define TRACE(fmt, ...)
 */
 
-riff_chunk_t riff_chunk;		/* header of wav file */
-fmt_chunk_t fmt_chunk;			/* header of wav file */
-data_chunk_t data_chunk;		/* header of wav file */
 uint32_t number_of_samples = 0;
-
-void print_informations() {
-	printf(" ---------------------------------------------------------------------\n");
-	printf("| Group:                                                              |\n");
-	printf("| Gustavo Luvizotto Cesar - 6783544                                   |\n");
-	printf("| Ivan Donisete Lonel     - 6766044                                   |\n");
-	printf(" ---------------------------------------------------------------------\n");
-	printf("\n");
-	printf(" ---------------------------------------------------------------------\n");
-	printf("| The user can compress your 16-channel (at maximum) wav sound file   |\n");
-	printf("| using the differences and/or huffman coding methods, combining them |\n");
-	printf("| or not, as user desired. The combination of the compressions not    |\n");
-	printf("| always generates a small output file. The best compression obtained |\n");
-	printf("| was using differences (that uses huffman coding implicitly). The    |\n");
-	printf("| original wav need to have 8 bits per sample and do not have been    |\n");
-	printf("| compress.                                                           |\n");
-	printf(" ---------------------------------------------------------------------\n");
-	printf("\n");
-}
-
-void print_headers() {
-	PRINT_STRUCT(&riff_chunk);
-	PRINT_STRUCT(&fmt_chunk);
-	PRINT_STRUCT(&data_chunk);
-
-	TRACE("riff: %lu \n", sizeof(riff_chunk));
-	TRACE("fmt: %lu \n", sizeof(fmt_chunk));
-	TRACE("data: %lu \n", sizeof(data_chunk));
-}
-
-void system_pause() {
-    printf("Press <ENTER> to exit... \n");
-    fflush(stdin);
-    getchar();
-}
 
 result_t read_sound(char *in_file) {
 	FILE *fp = NULL;			/* pointer to read and write file */
@@ -120,22 +83,7 @@ result_t read_sound(char *in_file) {
 	return result;
 }
 
-uint8_t search_for_equal_element(int list[], int size, int key) {
-	  uint8_t found = FALSE;
-	  int i;
-
-	  for ( i = 0; i < size; i++ ) {
-	    if ( key == list[i] )
-	      break;
-	  }
-	  if ( i < size ) {
-	    found = TRUE;
-	  }
-
-	  return found;
-}
-
-uint32_t update_data(char *read_file) {
+uint32_t update_data_from_file(char *read_file) {
 	FILE *fp;
 	size_t size;
 	uint32_t begin;
@@ -276,7 +224,7 @@ result_t compress(char out_file[]) {
 			result = write_huffman(huffman_tree->root, data_sample, frequency, out_file, number_of_samples);
 			TRACE("Compressed bytes have been written!\n");
 			/* update data samples to input in an other compression, if is the case */
-			number_of_samples = update_data(out_file);
+			number_of_samples = update_data_from_file(out_file);
 			break;
 		case 2:
 			frequency = (frequency_t*) malloc ((MAX_BITS + 1) * sizeof(frequency_t));
@@ -290,7 +238,7 @@ result_t compress(char out_file[]) {
 			write_differences(frequency, codes, out_file, number_of_samples);
 			TRACE("Compressed bytes have been written!\n");
 			/* update data samples to input in an other compression, if is the case */
-			number_of_samples = update_data(out_file);
+			number_of_samples = update_data_from_file(out_file);
 			break;
 		case 3:
 			break;
